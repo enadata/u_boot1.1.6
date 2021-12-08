@@ -2,37 +2,22 @@
  * (C) Copyright 2001
  * Denis Peter, MPL AG Switzerland
  *
- * See file CREDITS for list of people who contributed to this
- * project.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
- *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
  #ifndef _SCSI_H
  #define _SCSI_H
 
 typedef struct SCSI_cmd_block{
 	unsigned char		cmd[16];					/* command				   */
-	unsigned char		sense_buf[64];		/* for request sense */
+	/* for request sense */
+	unsigned char		sense_buf[64]
+		__attribute__((aligned(ARCH_DMA_MINALIGN)));
 	unsigned char		status;						/* SCSI Status			 */
 	unsigned char		target;						/* Target ID				 */
 	unsigned char		lun;							/* Target LUN        */
 	unsigned char		cmdlen;						/* command len				*/
 	unsigned long		datalen;					/* Total data length	*/
-	unsigned char	*	pdata; 						/* pointer to data		*/
+	unsigned char	*	pdata;						/* pointer to data		*/
 	unsigned char		msgout[12];				/* Messge out buffer (NOT USED) */
 	unsigned char		msgin[12];				/* Message in buffer	*/
 	unsigned char		sensecmdlen;			/* Sense command len	*/
@@ -77,7 +62,7 @@ typedef struct SCSI_cmd_block{
 #define	M_HEAD_TAG	(0x21)
 #define	M_ORDERED_TAG	(0x22)
 #define	M_IGN_RESIDUE	(0x23)
-#define	M_IDENTIFY   	(0x80)
+#define	M_IDENTIFY	(0x80)
 
 #define	M_X_MODIFY_DP	(0x00)
 #define	M_X_SYNC_REQ	(0x01)
@@ -147,7 +132,10 @@ typedef struct SCSI_cmd_block{
 #define SCSI_MED_REMOVL	0x1E		/* Prevent/Allow medium Removal (O) */
 #define SCSI_READ6		0x08		/* Read 6-byte (MANDATORY) */
 #define SCSI_READ10		0x28		/* Read 10-byte (MANDATORY) */
+#define SCSI_READ16	0x48
 #define SCSI_RD_CAPAC	0x25		/* Read Capacity (MANDATORY) */
+#define SCSI_RD_CAPAC10	SCSI_RD_CAPAC	/* Read Capacity (10) */
+#define SCSI_RD_CAPAC16	0x9e		/* Read Capacity (16) */
 #define SCSI_RD_DEFECT	0x37		/* Read Defect Data (O) */
 #define SCSI_READ_LONG	0x3E		/* Read Long (O) */
 #define SCSI_REASS_BLK	0x07		/* Reassign Blocks (O) */
@@ -185,24 +173,19 @@ void scsi_low_level_init(int busdevfunc);
  * functions residing inside cmd_scsi.c
  */
 void scsi_init(void);
+void scsi_scan(int mode);
 
+/** @return the number of scsi disks */
+int scsi_get_disk_count(void);
 
 #define SCSI_IDENTIFY					0xC0  /* not used */
 
 /* Hardware errors  */
 #define SCSI_SEL_TIME_OUT			 0x00000101	 /* Selection time out */
 #define SCSI_HNS_TIME_OUT			 0x00000102  /* Handshake */
-#define SCSI_MA_TIME_OUT	 		 0x00000103  /* Phase error */
+#define SCSI_MA_TIME_OUT			 0x00000103  /* Phase error */
 #define SCSI_UNEXP_DIS				 0x00000104  /* unexpected disconnect */
 
 #define SCSI_INT_STATE				 0x00010000  /* unknown Interrupt number is stored in 16 LSB */
-
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 #endif /* _SCSI_H */

@@ -1,13 +1,10 @@
 /*
- * Copyright 2004 Freescale Semiconductor.
+ * Copyright 2004, 2007 Freescale Semiconductor.
  * Copyright(c) 2003 Motorola Inc.
- * Xianghua Xiao (x.xiao@motorola.com)
  */
 
 #ifndef	__MPC85xx_H__
 #define __MPC85xx_H__
-
-#define EXC_OFF_SYS_RESET	0x0100	/* System reset	*/
 
 #if defined(CONFIG_E500)
 #include <e500.h>
@@ -26,38 +23,45 @@
 #define SCCR_DFBRG11    0x00000003      /* BRGCLK division by 256 */
 
 /*
- * Local Bus Controller - memory controller registers
+ * Define default values for some CCSR macros to make header files cleaner*
+ *
+ * To completely disable CCSR relocation in a board header file, define
+ * CONFIG_SYS_CCSR_DO_NOT_RELOCATE.  This will force CONFIG_SYS_CCSRBAR_PHYS
+ * to a value that is the same as CONFIG_SYS_CCSRBAR.
  */
-#define BRx_V		0x00000001	/* Bank Valid			*/
-#define BRx_MS_GPCM	0x00000000	/* G.P.C.M. Machine Select	*/
-#define BRx_MS_SDRAM	0x00000000	/* SDRAM Machine Select		*/
-#define BRx_MS_UPMA	0x00000080	/* U.P.M.A Machine Select	*/
-#define BRx_MS_UPMB	0x000000a0	/* U.P.M.B Machine Select	*/
-#define BRx_MS_UPMC	0x000000c0	/* U.P.M.C Machine Select	*/
-#define BRx_PS_8	0x00000800	/*  8 bit port size		*/
-#define BRx_PS_32	0x00001800	/* 32 bit port size		*/
-#define BRx_BA_MSK	0xffff8000	/* Base Address Mask		*/
 
-#define ORxG_EAD	0x00000001	/* External addr latch delay	*/
-#define ORxG_EHTR	0x00000002	/* Extended hold time on read	*/
-#define ORxG_TRLX	0x00000004	/* Timing relaxed		*/
-#define ORxG_SETA	0x00000008	/* External address termination	*/
-#define ORxG_SCY_10_CLK	0x000000a0	/* 10 clock cycles wait states	*/
-#define ORxG_SCY_15_CLK	0x000000f0	/* 15 clock cycles wait states	*/
-#define ORxG_XACS	0x00000100	/* Extra addr to CS setup	*/
-#define ORxG_ACS_DIV2	0x00000600	/* CS is output 1/2 a clock later*/
-#define ORxG_CSNT	0x00000800	/* Chip Select Negation Time	*/
+#ifdef CONFIG_SYS_CCSRBAR_PHYS
+#error "Do not define CONFIG_SYS_CCSRBAR_PHYS directly.  Use \
+CONFIG_SYS_CCSRBAR_PHYS_LOW and/or CONFIG_SYS_CCSRBAR_PHYS_HIGH instead."
+#endif
 
-#define ORxU_BI		0x00000100	/* Burst Inhibit		*/
-#define ORxU_AM_MSK	0xffff8000	/* Address Mask Mask		*/
+#ifdef CONFIG_SYS_CCSR_DO_NOT_RELOCATE
+#undef CONFIG_SYS_CCSRBAR_PHYS_HIGH
+#undef CONFIG_SYS_CCSRBAR_PHYS_LOW
+#define CONFIG_SYS_CCSRBAR_PHYS_HIGH	0
+#endif
 
-#define MxMR_OP_NORM	0x00000000	/* Normal Operation		*/
-#define MxMR_DSx_2_CYCL 0x00400000	/* 2 cycle Disable Period	*/
-#define MxMR_OP_WARR	0x10000000	/* Write to Array		*/
-#define MxMR_BSEL	0x80000000	/* Bus Select			*/
+#ifndef CONFIG_SYS_CCSRBAR
+#define CONFIG_SYS_CCSRBAR 		CONFIG_SYS_CCSRBAR_DEFAULT
+#endif
 
-/* helpers to convert values into an OR address mask (GPCM mode) */
-#define P2SZ_TO_AM(s)	((~((s) - 1)) & 0xffff8000)	/* must be pow of 2 */
-#define MEG_TO_AM(m)	P2SZ_TO_AM((m) << 20)
+#ifndef CONFIG_SYS_CCSRBAR_PHYS_HIGH
+#ifdef CONFIG_PHYS_64BIT
+#define CONFIG_SYS_CCSRBAR_PHYS_HIGH	0xf
+#else
+#define CONFIG_SYS_CCSRBAR_PHYS_HIGH	0
+#endif
+#endif
+
+#ifndef CONFIG_SYS_CCSRBAR_PHYS_LOW
+#define CONFIG_SYS_CCSRBAR_PHYS_LOW 	CONFIG_SYS_CCSRBAR_DEFAULT
+#endif
+
+#define CONFIG_SYS_CCSRBAR_PHYS ((CONFIG_SYS_CCSRBAR_PHYS_HIGH * 1ull) << 32 | \
+				 CONFIG_SYS_CCSRBAR_PHYS_LOW)
+
+#ifndef CONFIG_SYS_IMMR
+#define CONFIG_SYS_IMMR 		CONFIG_SYS_CCSRBAR
+#endif
 
 #endif	/* __MPC85xx_H__ */

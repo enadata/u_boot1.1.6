@@ -2,23 +2,7 @@
  * (C) Copyright 2001 Sysgo Real-Time Solutions, GmbH <www.elinos.com>
  * Andreas Heppel <aheppel@sysgo.de>
  *
- * See file CREDITS for list of people who contributed to this
- * project.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -26,11 +10,11 @@
  */
 
 
-#if defined(CONFIG_RTC_MK48T59) && (CONFIG_COMMANDS & CFG_CMD_DATE)
+#if defined(CONFIG_RTC_MK48T59) && defined(CONFIG_CMD_DATE)
 
-#define RTC_PORT_ADDR0		CFG_ISA_IO +  0x70
+#define RTC_PORT_ADDR0		CONFIG_SYS_ISA_IO +  0x70
 #define RTC_PORT_ADDR1		RTC_PORT_ADDR0 +  0x1
-#define RTC_PORT_DATA		CFG_ISA_IO +  0x76
+#define RTC_PORT_DATA		CONFIG_SYS_ISA_IO +  0x76
 
 /* RTC Offsets */
 #define RTC_SECONDS             0x1FF9

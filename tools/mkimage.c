@@ -1,452 +1,516 @@
 /*
- * (C) Copyright 2000-2004
+ * (C) Copyright 2008 Semihalf
+ *
+ * (C) Copyright 2000-2009
  * DENX Software Engineering
  * Wolfgang Denk, wd@denx.de
- * All rights reserved.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifndef __WIN32__
-#include <netinet/in.h>		/* for host / network byte order conversions	*/
-#endif
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <unistd.h>
-
-#if defined(__BEOS__) || defined(__NetBSD__) || defined(__APPLE__)
-#include <inttypes.h>
-#endif
-
-#ifdef __WIN32__
-typedef unsigned int __u32;
-
-#define SWAP_LONG(x) \
-	((__u32)( \
-		(((__u32)(x) & (__u32)0x000000ffUL) << 24) | \
-		(((__u32)(x) & (__u32)0x0000ff00UL) <<  8) | \
-		(((__u32)(x) & (__u32)0x00ff0000UL) >>  8) | \
-		(((__u32)(x) & (__u32)0xff000000UL) >> 24) ))
-typedef		unsigned char	uint8_t;
-typedef		unsigned short	uint16_t;
-typedef		unsigned int	uint32_t;
-
-#define     ntohl(a)	SWAP_LONG(a)
-#define     htonl(a)	SWAP_LONG(a)
-#endif	/* __WIN32__ */
-
-#ifndef	O_BINARY		/* should be define'd on __WIN32__ */
-#define O_BINARY	0
-#endif
-
+#include "mkimage.h"
 #include <image.h>
+#include <version.h>
 
-extern int errno;
+static void copy_file(int, const char *, int);
 
-#ifndef MAP_FAILED
-#define MAP_FAILED (-1)
-#endif
-
-char *cmdname;
-
-extern unsigned long crc32 (unsigned long crc, const char *buf, unsigned int len);
-
-typedef struct table_entry {
-	int	val;		/* as defined in image.h	*/
-	char	*sname;		/* short (input) name		*/
-	char	*lname;		/* long (output) name		*/
-} table_entry_t;
-
-table_entry_t arch_name[] = {
-    {	IH_CPU_INVALID,		NULL,		"Invalid CPU",	},
-    {	IH_CPU_ALPHA,		"alpha",	"Alpha",	},
-    {	IH_CPU_ARM,		"arm",		"ARM",		},
-    {	IH_CPU_I386,		"x86",		"Intel x86",	},
-    {	IH_CPU_IA64,		"ia64",		"IA64",		},
-    {	IH_CPU_M68K,		"m68k",		"MC68000",	},
-    {	IH_CPU_MICROBLAZE,	"microblaze",	"MicroBlaze",	},
-    {	IH_CPU_MIPS,		"mips",		"MIPS",		},
-    {	IH_CPU_MIPS64,		"mips64",	"MIPS 64 Bit",	},
-    {	IH_CPU_NIOS,		"nios",		"NIOS",		},
-    {	IH_CPU_NIOS2,		"nios2",	"NIOS II",	},
-    {	IH_CPU_PPC,		"ppc",		"PowerPC",	},
-    {	IH_CPU_S390,		"s390",		"IBM S390",	},
-    {	IH_CPU_SH,		"sh",		"SuperH",	},
-    {	IH_CPU_SPARC,		"sparc",	"SPARC",	},
-    {	IH_CPU_SPARC64,		"sparc64",	"SPARC 64 Bit",	},
-    {	IH_CPU_BLACKFIN,	"blackfin",	"Blackfin",	},
-    {	IH_CPU_AVR32,		"avr32",	"AVR32",	},
-    {	-1,			"",		"",		},
+/* parameters initialized by core will be used by the image type code */
+static struct image_tool_params params = {
+	.os = IH_OS_LINUX,
+	.arch = IH_ARCH_PPC,
+	.type = IH_TYPE_KERNEL,
+	.comp = IH_COMP_GZIP,
+	.dtc = MKIMAGE_DEFAULT_DTC_OPTIONS,
+	.imagename = "",
+	.imagename2 = "",
 };
 
-table_entry_t os_name[] = {
-    {	IH_OS_INVALID,	NULL,		"Invalid OS",		},
-    {	IH_OS_4_4BSD,	"4_4bsd",	"4_4BSD",		},
-    {	IH_OS_ARTOS,	"artos",	"ARTOS",		},
-    {	IH_OS_DELL,	"dell",		"Dell",			},
-    {	IH_OS_ESIX,	"esix",		"Esix",			},
-    {	IH_OS_FREEBSD,	"freebsd",	"FreeBSD",		},
-    {	IH_OS_IRIX,	"irix",		"Irix",			},
-    {	IH_OS_LINUX,	"linux",	"Linux",		},
-    {	IH_OS_LYNXOS,	"lynxos",	"LynxOS",		},
-    {	IH_OS_NCR,	"ncr",		"NCR",			},
-    {	IH_OS_NETBSD,	"netbsd",	"NetBSD",		},
-    {	IH_OS_OPENBSD,	"openbsd",	"OpenBSD",		},
-    {	IH_OS_PSOS,	"psos",		"pSOS",			},
-    {	IH_OS_QNX,	"qnx",		"QNX",			},
-    {	IH_OS_RTEMS,	"rtems",	"RTEMS",		},
-    {	IH_OS_SCO,	"sco",		"SCO",			},
-    {	IH_OS_SOLARIS,	"solaris",	"Solaris",		},
-    {	IH_OS_SVR4,	"svr4",		"SVR4",			},
-    {	IH_OS_U_BOOT,	"u-boot",	"U-Boot",		},
-    {	IH_OS_VXWORKS,	"vxworks",	"VxWorks",		},
-    {	-1,		"",		"",			},
-};
+static enum ih_category cur_category;
 
-table_entry_t type_name[] = {
-    {	IH_TYPE_INVALID,    NULL,	  "Invalid Image",	},
-    {	IH_TYPE_FILESYSTEM, "filesystem", "Filesystem Image",	},
-    {	IH_TYPE_FIRMWARE,   "firmware",	  "Firmware",		},
-    {	IH_TYPE_KERNEL,	    "kernel",	  "Kernel Image",	},
-    {	IH_TYPE_MULTI,	    "multi",	  "Multi-File Image",	},
-    {	IH_TYPE_RAMDISK,    "ramdisk",	  "RAMDisk Image",	},
-    {	IH_TYPE_SCRIPT,     "script",	  "Script",		},
-    {	IH_TYPE_STANDALONE, "standalone", "Standalone Program", },
-    {	IH_TYPE_FLATDT,     "flat_dt",    "Flat Device Tree",	},
-    {	-1,		    "",		  "",			},
-};
-
-table_entry_t comp_name[] = {
-    {	IH_COMP_NONE,	"none",		"uncompressed",		},
-    {	IH_COMP_BZIP2,	"bzip2",	"bzip2 compressed",	},
-    {	IH_COMP_GZIP,	"gzip",		"gzip compressed",	},
-    {	-1,		"",		"",			},
-};
-
-static	void	copy_file (int, const char *, int);
-static	void	usage	(void);
-static	void	print_header (image_header_t *);
-static	void	print_type (image_header_t *);
-static	char	*put_table_entry (table_entry_t *, char *, int);
-static	char	*put_arch (int);
-static	char	*put_type (int);
-static	char	*put_os   (int);
-static	char	*put_comp (int);
-static	int	get_table_entry (table_entry_t *, char *, char *);
-static	int	get_arch(char *);
-static	int	get_comp(char *);
-static	int	get_os  (char *);
-static	int	get_type(char *);
-
-
-char	*datafile;
-char	*imagefile;
-
-int dflag    = 0;
-int eflag    = 0;
-int lflag    = 0;
-int vflag    = 0;
-int xflag    = 0;
-int opt_os   = IH_OS_LINUX;
-int opt_arch = IH_CPU_PPC;
-int opt_type = IH_TYPE_KERNEL;
-int opt_comp = IH_COMP_GZIP;
-
-image_header_t header;
-image_header_t *hdr = &header;
-
-int
-main (int argc, char **argv)
+static int h_compare_category_name(const void *vtype1, const void *vtype2)
 {
-	int ifd;
-	uint32_t checksum;
-	uint32_t addr;
-	uint32_t ep;
-	struct stat sbuf;
-	unsigned char *ptr;
-	char *name = "";
+	const int *type1 = vtype1;
+	const int *type2 = vtype2;
+	const char *name1 = genimg_get_cat_short_name(cur_category, *type1);
+	const char *name2 = genimg_get_cat_short_name(cur_category, *type2);
 
-	cmdname = *argv;
+	return strcmp(name1, name2);
+}
 
-	addr = ep = 0;
+static int show_valid_options(enum ih_category category)
+{
+	int *order;
+	int count;
+	int item;
+	int i;
 
-	while (--argc > 0 && **++argv == '-') {
-		while (*++*argv) {
-			switch (**argv) {
-			case 'l':
-				lflag = 1;
-				break;
-			case 'A':
-				if ((--argc <= 0) ||
-				    (opt_arch = get_arch(*++argv)) < 0)
-					usage ();
-				goto NXTARG;
-			case 'C':
-				if ((--argc <= 0) ||
-				    (opt_comp = get_comp(*++argv)) < 0)
-					usage ();
-				goto NXTARG;
-			case 'O':
-				if ((--argc <= 0) ||
-				    (opt_os = get_os(*++argv)) < 0)
-					usage ();
-				goto NXTARG;
-			case 'T':
-				if ((--argc <= 0) ||
-				    (opt_type = get_type(*++argv)) < 0)
-					usage ();
-				goto NXTARG;
+	count = genimg_get_cat_count(category);
+	order = calloc(count, sizeof(*order));
+	if (!order)
+		return -ENOMEM;
 
-			case 'a':
-				if (--argc <= 0)
-					usage ();
-				addr = strtoul (*++argv, (char **)&ptr, 16);
-				if (*ptr) {
-					fprintf (stderr,
-						"%s: invalid load address %s\n",
-						cmdname, *argv);
-					exit (EXIT_FAILURE);
-				}
-				goto NXTARG;
-			case 'd':
-				if (--argc <= 0)
-					usage ();
-				datafile = *++argv;
-				dflag = 1;
-				goto NXTARG;
-			case 'e':
-				if (--argc <= 0)
-					usage ();
-				ep = strtoul (*++argv, (char **)&ptr, 16);
-				if (*ptr) {
-					fprintf (stderr,
-						"%s: invalid entry point %s\n",
-						cmdname, *argv);
-					exit (EXIT_FAILURE);
-				}
-				eflag = 1;
-				goto NXTARG;
-			case 'n':
-				if (--argc <= 0)
-					usage ();
-				name = *++argv;
-				goto NXTARG;
-			case 'v':
-				vflag++;
-				break;
-			case 'x':
-				xflag++;
-				break;
-			default:
-				usage ();
+	/* Sort the names in order of short name for easier reading */
+	for (item = 0; item < count; item++)
+		order[item] = item;
+	cur_category = category;
+	qsort(order, count, sizeof(int), h_compare_category_name);
+
+	fprintf(stderr, "\nInvalid %s, supported are:\n",
+		genimg_get_cat_desc(category));
+	for (i = 0; i < count; i++) {
+		item = order[i];
+		fprintf(stderr, "\t%-15s  %s\n",
+			genimg_get_cat_short_name(category, item),
+			genimg_get_cat_name(category, item));
+	}
+	fprintf(stderr, "\n");
+
+	return 0;
+}
+
+static void usage(const char *msg)
+{
+	fprintf(stderr, "Error: %s\n", msg);
+	fprintf(stderr, "Usage: %s -l image\n"
+			 "          -l ==> list image header information\n",
+		params.cmdname);
+	fprintf(stderr,
+		"       %s [-x] -A arch -O os -T type -C comp -a addr -e ep -n name -d data_file[:data_file...] image\n"
+		"          -A ==> set architecture to 'arch'\n"
+		"          -O ==> set operating system to 'os'\n"
+		"          -T ==> set image type to 'type'\n"
+		"          -C ==> set compression type 'comp'\n"
+		"          -a ==> set load address to 'addr' (hex)\n"
+		"          -e ==> set entry point to 'ep' (hex)\n"
+		"          -n ==> set image name to 'name'\n"
+		"          -d ==> use image data from 'datafile'\n"
+		"          -x ==> set XIP (execute in place)\n",
+		params.cmdname);
+	fprintf(stderr,
+		"       %s [-D dtc_options] [-f fit-image.its|-f auto|-F] [-b <dtb> [-b <dtb>]] fit-image\n"
+		"           <dtb> file is used with -f auto, it may occour multiple times.\n",
+		params.cmdname);
+	fprintf(stderr,
+		"          -D => set all options for device tree compiler\n"
+		"          -f => input filename for FIT source\n");
+#ifdef CONFIG_FIT_SIGNATURE
+	fprintf(stderr,
+		"Signing / verified boot options: [-E] [-k keydir] [-K dtb] [ -c <comment>] [-p addr] [-r]\n"
+		"          -E => place data outside of the FIT structure\n"
+		"          -k => set directory containing private keys\n"
+		"          -K => write public keys to this .dtb file\n"
+		"          -c => add comment in signature node\n"
+		"          -F => re-sign existing FIT image\n"
+		"          -p => place external data at a static position\n"
+		"          -r => mark keys used as 'required' in dtb\n");
+#else
+	fprintf(stderr,
+		"Signing / verified boot not supported (CONFIG_FIT_SIGNATURE undefined)\n");
+#endif
+	fprintf(stderr, "       %s -V ==> print version information and exit\n",
+		params.cmdname);
+	fprintf(stderr, "Use -T to see a list of available image types\n");
+
+	exit(EXIT_FAILURE);
+}
+
+static int add_content(int type, const char *fname)
+{
+	struct content_info *cont;
+
+	cont = calloc(1, sizeof(*cont));
+	if (!cont)
+		return -1;
+	cont->type = type;
+	cont->fname = fname;
+	if (params.content_tail)
+		params.content_tail->next = cont;
+	else
+		params.content_head = cont;
+	params.content_tail = cont;
+
+	return 0;
+}
+
+static void process_args(int argc, char **argv)
+{
+	char *ptr;
+	int type = IH_TYPE_INVALID;
+	char *datafile = NULL;
+	int opt;
+
+	while ((opt = getopt(argc, argv,
+			     "a:A:b:c:C:d:D:e:Ef:Fk:K:ln:p:O:rR:qsT:vVx")) != -1) {
+		switch (opt) {
+		case 'a':
+			params.addr = strtoull(optarg, &ptr, 16);
+			if (*ptr) {
+				fprintf(stderr, "%s: invalid load address %s\n",
+					params.cmdname, optarg);
+				exit(EXIT_FAILURE);
 			}
+			break;
+		case 'A':
+			params.arch = genimg_get_arch_id(optarg);
+			if (params.arch < 0) {
+				show_valid_options(IH_ARCH);
+				usage("Invalid architecture");
+			}
+			break;
+		case 'b':
+			if (add_content(IH_TYPE_FLATDT, optarg)) {
+				fprintf(stderr,
+					"%s: Out of memory adding content '%s'",
+					params.cmdname, optarg);
+				exit(EXIT_FAILURE);
+			}
+			break;
+		case 'c':
+			params.comment = optarg;
+			break;
+		case 'C':
+			params.comp = genimg_get_comp_id(optarg);
+			if (params.comp < 0) {
+				show_valid_options(IH_COMP);
+				usage("Invalid compression type");
+			}
+			break;
+		case 'd':
+			params.datafile = optarg;
+			params.dflag = 1;
+			break;
+		case 'D':
+			params.dtc = optarg;
+			break;
+		case 'e':
+			params.ep = strtoull(optarg, &ptr, 16);
+			if (*ptr) {
+				fprintf(stderr, "%s: invalid entry point %s\n",
+					params.cmdname, optarg);
+				exit(EXIT_FAILURE);
+			}
+			params.eflag = 1;
+			break;
+		case 'E':
+			params.external_data = true;
+			break;
+		case 'f':
+			datafile = optarg;
+			params.auto_its = !strcmp(datafile, "auto");
+			/* no break */
+		case 'F':
+			/*
+			 * The flattened image tree (FIT) format
+			 * requires a flattened device tree image type
+			 */
+			params.type = IH_TYPE_FLATDT;
+			params.fflag = 1;
+			break;
+		case 'k':
+			params.keydir = optarg;
+			break;
+		case 'K':
+			params.keydest = optarg;
+			break;
+		case 'l':
+			params.lflag = 1;
+			break;
+		case 'n':
+			params.imagename = optarg;
+			break;
+		case 'O':
+			params.os = genimg_get_os_id(optarg);
+			if (params.os < 0) {
+				show_valid_options(IH_OS);
+				usage("Invalid operating system");
+			}
+			break;
+		case 'p':
+			params.external_offset = strtoull(optarg, &ptr, 16);
+			if (*ptr) {
+				fprintf(stderr, "%s: invalid offset size %s\n",
+					params.cmdname, optarg);
+				exit(EXIT_FAILURE);
+			}
+			break;
+		case 'q':
+			params.quiet = 1;
+			break;
+		case 'r':
+			params.require_keys = 1;
+			break;
+		case 'R':
+			/*
+			 * This entry is for the second configuration
+			 * file, if only one is not enough.
+			 */
+			params.imagename2 = optarg;
+			break;
+		case 's':
+			params.skipcpy = 1;
+			break;
+		case 'T':
+			type = genimg_get_type_id(optarg);
+			if (type < 0) {
+				show_valid_options(IH_TYPE);
+				usage("Invalid image type");
+			}
+			break;
+		case 'v':
+			params.vflag++;
+			break;
+		case 'V':
+			printf("mkimage version %s\n", PLAIN_VERSION);
+			exit(EXIT_SUCCESS);
+		case 'x':
+			params.xflag++;
+			break;
+		default:
+			usage("Invalid option");
 		}
-NXTARG:		;
 	}
 
-	if ((argc != 1) || ((lflag ^ dflag) == 0))
-		usage();
+	/* The last parameter is expected to be the imagefile */
+	if (optind < argc)
+		params.imagefile = argv[optind];
 
-	if (!eflag) {
-		ep = addr;
-		/* If XIP, entry point must be after the U-Boot header */
-		if (xflag)
-			ep += sizeof(image_header_t);
+	/*
+	 * For auto-generated FIT images we need to know the image type to put
+	 * in the FIT, which is separate from the file's image type (which
+	 * will always be IH_TYPE_FLATDT in this case).
+	 */
+	if (params.type == IH_TYPE_FLATDT) {
+		params.fit_image_type = type ? type : IH_TYPE_KERNEL;
+		/* For auto_its, datafile is always 'auto' */
+		if (!params.auto_its)
+			params.datafile = datafile;
+		else if (!params.datafile)
+			usage("Missing data file for auto-FIT (use -d)");
+	} else if (type != IH_TYPE_INVALID) {
+		params.type = type;
+	}
+
+	if (!params.imagefile)
+		usage("Missing output filename");
+}
+
+int main(int argc, char **argv)
+{
+	int ifd = -1;
+	struct stat sbuf;
+	char *ptr;
+	int retval = 0;
+	struct image_type_params *tparams = NULL;
+	int pad_len = 0;
+	int dfd;
+
+	params.cmdname = *argv;
+	params.addr = 0;
+	params.ep = 0;
+
+	process_args(argc, argv);
+
+	/* set tparams as per input type_id */
+	tparams = imagetool_get_type(params.type);
+	if (tparams == NULL) {
+		fprintf (stderr, "%s: unsupported type %s\n",
+			params.cmdname, genimg_get_type_name(params.type));
+		exit (EXIT_FAILURE);
 	}
 
 	/*
-	 * If XIP, ensure the entry point is equal to the load address plus
-	 * the size of the U-Boot header.
+	 * check the passed arguments parameters meets the requirements
+	 * as per image type to be generated/listed
 	 */
-	if (xflag) {
-		if (ep != addr + sizeof(image_header_t)) {
-			fprintf (stderr,
-				"%s: For XIP, the entry point must be the load addr + %lu\n",
-				cmdname,
-				(unsigned long)sizeof(image_header_t));
-			exit (EXIT_FAILURE);
-		}
+	if (tparams->check_params)
+		if (tparams->check_params (&params))
+			usage("Bad parameters for image type");
+
+	if (!params.eflag) {
+		params.ep = params.addr;
+		/* If XIP, entry point must be after the U-Boot header */
+		if (params.xflag)
+			params.ep += tparams->header_size;
 	}
 
-	imagefile = *argv;
+	if (params.fflag){
+		if (tparams->fflag_handle)
+			/*
+			 * in some cases, some additional processing needs
+			 * to be done if fflag is defined
+			 *
+			 * For ex. fit_handle_file for Fit file support
+			 */
+			retval = tparams->fflag_handle(&params);
 
-	if (lflag) {
-		ifd = open(imagefile, O_RDONLY|O_BINARY);
+		if (retval != EXIT_SUCCESS)
+			exit (retval);
+	}
+
+	if (params.lflag || params.fflag) {
+		ifd = open (params.imagefile, O_RDONLY|O_BINARY);
 	} else {
-		ifd = open(imagefile, O_RDWR|O_CREAT|O_TRUNC|O_BINARY, 0666);
+		ifd = open (params.imagefile,
+			O_RDWR|O_CREAT|O_TRUNC|O_BINARY, 0666);
 	}
 
 	if (ifd < 0) {
 		fprintf (stderr, "%s: Can't open %s: %s\n",
-			cmdname, imagefile, strerror(errno));
+			params.cmdname, params.imagefile,
+			strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
-	if (lflag) {
-		int len;
-		char *data;
+	if (params.lflag || params.fflag) {
 		/*
 		 * list header information of existing image
 		 */
 		if (fstat(ifd, &sbuf) < 0) {
 			fprintf (stderr, "%s: Can't stat %s: %s\n",
-				cmdname, imagefile, strerror(errno));
+				params.cmdname, params.imagefile,
+				strerror(errno));
 			exit (EXIT_FAILURE);
 		}
 
-		if ((unsigned)sbuf.st_size < sizeof(image_header_t)) {
+		if ((unsigned)sbuf.st_size < tparams->header_size) {
 			fprintf (stderr,
-				"%s: Bad size: \"%s\" is no valid image\n",
-				cmdname, imagefile);
+				"%s: Bad size: \"%s\" is not valid image\n",
+				params.cmdname, params.imagefile);
 			exit (EXIT_FAILURE);
 		}
 
-		ptr = (unsigned char *)mmap(0, sbuf.st_size,
-					    PROT_READ, MAP_SHARED, ifd, 0);
-		if ((caddr_t)ptr == (caddr_t)-1) {
+		ptr = mmap(0, sbuf.st_size, PROT_READ, MAP_SHARED, ifd, 0);
+		if (ptr == MAP_FAILED) {
 			fprintf (stderr, "%s: Can't read %s: %s\n",
-				cmdname, imagefile, strerror(errno));
+				params.cmdname, params.imagefile,
+				strerror(errno));
 			exit (EXIT_FAILURE);
 		}
 
 		/*
-		 * create copy of header so that we can blank out the
-		 * checksum field for checking - this can't be done
-		 * on the PROT_READ mapped data.
+		 * scan through mkimage registry for all supported image types
+		 * and verify the input image file header for match
+		 * Print the image information for matched image type
+		 * Returns the error code if not matched
 		 */
-		memcpy (hdr, ptr, sizeof(image_header_t));
-
-		if (ntohl(hdr->ih_magic) != IH_MAGIC) {
-			fprintf (stderr,
-				"%s: Bad Magic Number: \"%s\" is no valid image\n",
-				cmdname, imagefile);
-			exit (EXIT_FAILURE);
-		}
-
-		data = (char *)hdr;
-		len  = sizeof(image_header_t);
-
-		checksum = ntohl(hdr->ih_hcrc);
-		hdr->ih_hcrc = htonl(0);	/* clear for re-calculation */
-
-		if (crc32 (0, data, len) != checksum) {
-			fprintf (stderr,
-				"%s: ERROR: \"%s\" has bad header checksum!\n",
-				cmdname, imagefile);
-			exit (EXIT_FAILURE);
-		}
-
-		data = (char *)(ptr + sizeof(image_header_t));
-		len  = sbuf.st_size - sizeof(image_header_t) ;
-
-		if (crc32 (0, data, len) != ntohl(hdr->ih_dcrc)) {
-			fprintf (stderr,
-				"%s: ERROR: \"%s\" has corrupted data!\n",
-				cmdname, imagefile);
-			exit (EXIT_FAILURE);
-		}
-
-		/* for multi-file images we need the data part, too */
-		print_header ((image_header_t *)ptr);
+		retval = imagetool_verify_print_header(ptr, &sbuf,
+				tparams, &params);
 
 		(void) munmap((void *)ptr, sbuf.st_size);
 		(void) close (ifd);
 
-		exit (EXIT_SUCCESS);
+		exit (retval);
+	}
+
+	if ((params.type != IH_TYPE_MULTI) && (params.type != IH_TYPE_SCRIPT)) {
+		dfd = open(params.datafile, O_RDONLY | O_BINARY);
+		if (dfd < 0) {
+			fprintf(stderr, "%s: Can't open %s: %s\n",
+				params.cmdname, params.datafile,
+				strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
+		if (fstat(dfd, &sbuf) < 0) {
+			fprintf(stderr, "%s: Can't stat %s: %s\n",
+				params.cmdname, params.datafile,
+				strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
+		params.file_size = sbuf.st_size + tparams->header_size;
+		close(dfd);
 	}
 
 	/*
-	 * Must be -w then:
-	 *
-	 * write dummy header, to be fixed later
+	 * In case there an header with a variable
+	 * length will be added, the corresponding
+	 * function is called. This is responsible to
+	 * allocate memory for the header itself.
 	 */
-	memset (hdr, 0, sizeof(image_header_t));
+	if (tparams->vrec_header)
+		pad_len = tparams->vrec_header(&params, tparams);
+	else
+		memset(tparams->hdr, 0, tparams->header_size);
 
-	if (write(ifd, hdr, sizeof(image_header_t)) != sizeof(image_header_t)) {
+	if (write(ifd, tparams->hdr, tparams->header_size)
+					!= tparams->header_size) {
 		fprintf (stderr, "%s: Write error on %s: %s\n",
-			cmdname, imagefile, strerror(errno));
+			params.cmdname, params.imagefile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
-	if (opt_type == IH_TYPE_MULTI || opt_type == IH_TYPE_SCRIPT) {
-		char *file = datafile;
-		uint32_t size;
+	if (!params.skipcpy) {
+		if (params.type == IH_TYPE_MULTI ||
+		    params.type == IH_TYPE_SCRIPT) {
+			char *file = params.datafile;
+			uint32_t size;
 
-		for (;;) {
-			char *sep = NULL;
+			for (;;) {
+				char *sep = NULL;
 
-			if (file) {
-				if ((sep = strchr(file, ':')) != NULL) {
-					*sep = '\0';
+				if (file) {
+					if ((sep = strchr(file, ':')) != NULL) {
+						*sep = '\0';
+					}
+
+					if (stat (file, &sbuf) < 0) {
+						fprintf (stderr, "%s: Can't stat %s: %s\n",
+							 params.cmdname, file, strerror(errno));
+						exit (EXIT_FAILURE);
+					}
+					size = cpu_to_uimage (sbuf.st_size);
+				} else {
+					size = 0;
 				}
 
-				if (stat (file, &sbuf) < 0) {
-					fprintf (stderr, "%s: Can't stat %s: %s\n",
-						cmdname, file, strerror(errno));
+				if (write(ifd, (char *)&size, sizeof(size)) != sizeof(size)) {
+					fprintf (stderr, "%s: Write error on %s: %s\n",
+						 params.cmdname, params.imagefile,
+						 strerror(errno));
 					exit (EXIT_FAILURE);
 				}
-				size = htonl(sbuf.st_size);
-			} else {
-				size = 0;
+
+				if (!file) {
+					break;
+				}
+
+				if (sep) {
+					*sep = ':';
+					file = sep + 1;
+				} else {
+					file = NULL;
+				}
 			}
 
-			if (write(ifd, (char *)&size, sizeof(size)) != sizeof(size)) {
-				fprintf (stderr, "%s: Write error on %s: %s\n",
-					cmdname, imagefile, strerror(errno));
-				exit (EXIT_FAILURE);
-			}
+			file = params.datafile;
 
-			if (!file) {
-				break;
+			for (;;) {
+				char *sep = strchr(file, ':');
+				if (sep) {
+					*sep = '\0';
+					copy_file (ifd, file, 1);
+					*sep++ = ':';
+					file = sep;
+				} else {
+					copy_file (ifd, file, 0);
+					break;
+				}
 			}
-
-			if (sep) {
-				*sep = ':';
-				file = sep + 1;
-			} else {
-				file = NULL;
-			}
+		} else if (params.type == IH_TYPE_PBLIMAGE) {
+			/* PBL has special Image format, implements its' own */
+			pbl_load_uboot(ifd, &params);
+		} else {
+			copy_file(ifd, params.datafile, pad_len);
 		}
-
-		file = datafile;
-
-		for (;;) {
-			char *sep = strchr(file, ':');
-			if (sep) {
-				*sep = '\0';
-				copy_file (ifd, file, 1);
-				*sep++ = ':';
-				file = sep;
-			} else {
-				copy_file (ifd, file, 0);
-				break;
-			}
-		}
-	} else {
-		copy_file (ifd, datafile, 0);
 	}
 
 	/* We're a bit of paranoid */
-#if defined(_POSIX_SYNCHRONIZED_IO) && !defined(__sun__) && !defined(__FreeBSD__)
+#if defined(_POSIX_SYNCHRONIZED_IO) && \
+   !defined(__sun__) && \
+   !defined(__FreeBSD__) && \
+   !defined(__OpenBSD__) && \
+   !defined(__APPLE__)
 	(void) fdatasync (ifd);
 #else
 	(void) fsync (ifd);
@@ -454,49 +518,44 @@ NXTARG:		;
 
 	if (fstat(ifd, &sbuf) < 0) {
 		fprintf (stderr, "%s: Can't stat %s: %s\n",
-			cmdname, imagefile, strerror(errno));
+			params.cmdname, params.imagefile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
+	params.file_size = sbuf.st_size;
 
-	ptr = (unsigned char *)mmap(0, sbuf.st_size,
-				    PROT_READ|PROT_WRITE, MAP_SHARED, ifd, 0);
-	if (ptr == (unsigned char *)MAP_FAILED) {
+	ptr = mmap(0, sbuf.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, ifd, 0);
+	if (ptr == MAP_FAILED) {
 		fprintf (stderr, "%s: Can't map %s: %s\n",
-			cmdname, imagefile, strerror(errno));
+			params.cmdname, params.imagefile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
-	hdr = (image_header_t *)ptr;
+	/* Setup the image header as per input image type*/
+	if (tparams->set_header)
+		tparams->set_header (ptr, &sbuf, ifd, &params);
+	else {
+		fprintf (stderr, "%s: Can't set header for %s: %s\n",
+			params.cmdname, tparams->name, strerror(errno));
+		exit (EXIT_FAILURE);
+	}
 
-	checksum = crc32 (0,
-			  (const char *)(ptr + sizeof(image_header_t)),
-			  sbuf.st_size - sizeof(image_header_t)
-			 );
-
-	/* Build new header */
-	hdr->ih_magic = htonl(IH_MAGIC);
-	hdr->ih_time  = htonl(sbuf.st_mtime);
-	hdr->ih_size  = htonl(sbuf.st_size - sizeof(image_header_t));
-	hdr->ih_load  = htonl(addr);
-	hdr->ih_ep    = htonl(ep);
-	hdr->ih_dcrc  = htonl(checksum);
-	hdr->ih_os    = opt_os;
-	hdr->ih_arch  = opt_arch;
-	hdr->ih_type  = opt_type;
-	hdr->ih_comp  = opt_comp;
-
-	strncpy((char *)hdr->ih_name, name, IH_NMLEN);
-
-	checksum = crc32(0,(const char *)hdr,sizeof(image_header_t));
-
-	hdr->ih_hcrc = htonl(checksum);
-
-	print_header (hdr);
+	/* Print the image information by processing image header */
+	if (tparams->print_header)
+		tparams->print_header (ptr);
+	else {
+		fprintf (stderr, "%s: Can't print header for %s: %s\n",
+			params.cmdname, tparams->name, strerror(errno));
+		exit (EXIT_FAILURE);
+	}
 
 	(void) munmap((void *)ptr, sbuf.st_size);
 
 	/* We're a bit of paranoid */
-#if defined(_POSIX_SYNCHRONIZED_IO) && !defined(__sun__) && !defined(__FreeBSD__)
+#if defined(_POSIX_SYNCHRONIZED_IO) && \
+   !defined(__sun__) && \
+   !defined(__FreeBSD__) && \
+   !defined(__OpenBSD__) && \
+   !defined(__APPLE__)
 	(void) fdatasync (ifd);
 #else
 	(void) fsync (ifd);
@@ -504,7 +563,7 @@ NXTARG:		;
 
 	if (close(ifd)) {
 		fprintf (stderr, "%s: Write error on %s: %s\n",
-			cmdname, imagefile, strerror(errno));
+			params.cmdname, params.imagefile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
@@ -519,34 +578,37 @@ copy_file (int ifd, const char *datafile, int pad)
 	unsigned char *ptr;
 	int tail;
 	int zero = 0;
+	uint8_t zeros[4096];
 	int offset = 0;
 	int size;
+	struct image_type_params *tparams = imagetool_get_type(params.type);
 
-	if (vflag) {
+	memset(zeros, 0, sizeof(zeros));
+
+	if (params.vflag) {
 		fprintf (stderr, "Adding Image %s\n", datafile);
 	}
 
 	if ((dfd = open(datafile, O_RDONLY|O_BINARY)) < 0) {
 		fprintf (stderr, "%s: Can't open %s: %s\n",
-			cmdname, datafile, strerror(errno));
+			params.cmdname, datafile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
 	if (fstat(dfd, &sbuf) < 0) {
 		fprintf (stderr, "%s: Can't stat %s: %s\n",
-			cmdname, datafile, strerror(errno));
+			params.cmdname, datafile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
-	ptr = (unsigned char *)mmap(0, sbuf.st_size,
-				    PROT_READ, MAP_SHARED, dfd, 0);
-	if (ptr == (unsigned char *)MAP_FAILED) {
+	ptr = mmap(0, sbuf.st_size, PROT_READ, MAP_SHARED, dfd, 0);
+	if (ptr == MAP_FAILED) {
 		fprintf (stderr, "%s: Can't read %s: %s\n",
-			cmdname, datafile, strerror(errno));
+			params.cmdname, datafile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
-	if (xflag) {
+	if (params.xflag) {
 		unsigned char *p = NULL;
 		/*
 		 * XIP: do not append the image_header_t at the
@@ -554,198 +616,57 @@ copy_file (int ifd, const char *datafile, int pad)
 		 * reserved for it.
 		 */
 
-		if ((unsigned)sbuf.st_size < sizeof(image_header_t)) {
+		if ((unsigned)sbuf.st_size < tparams->header_size) {
 			fprintf (stderr,
 				"%s: Bad size: \"%s\" is too small for XIP\n",
-				cmdname, datafile);
+				params.cmdname, datafile);
 			exit (EXIT_FAILURE);
 		}
 
-		for (p=ptr; p < ptr+sizeof(image_header_t); p++) {
+		for (p = ptr; p < ptr + tparams->header_size; p++) {
 			if ( *p != 0xff ) {
 				fprintf (stderr,
 					"%s: Bad file: \"%s\" has invalid buffer for XIP\n",
-					cmdname, datafile);
+					params.cmdname, datafile);
 				exit (EXIT_FAILURE);
 			}
 		}
 
-		offset = sizeof(image_header_t);
+		offset = tparams->header_size;
 	}
 
 	size = sbuf.st_size - offset;
 	if (write(ifd, ptr + offset, size) != size) {
 		fprintf (stderr, "%s: Write error on %s: %s\n",
-			cmdname, imagefile, strerror(errno));
+			params.cmdname, params.imagefile, strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 
-	if (pad && ((tail = size % 4) != 0)) {
+	tail = size % 4;
+	if ((pad == 1) && (tail != 0)) {
 
 		if (write(ifd, (char *)&zero, 4-tail) != 4-tail) {
 			fprintf (stderr, "%s: Write error on %s: %s\n",
-				cmdname, imagefile, strerror(errno));
+				params.cmdname, params.imagefile,
+				strerror(errno));
 			exit (EXIT_FAILURE);
+		}
+	} else if (pad > 1) {
+		while (pad > 0) {
+			int todo = sizeof(zeros);
+
+			if (todo > pad)
+				todo = pad;
+			if (write(ifd, (char *)&zeros, todo) != todo) {
+				fprintf(stderr, "%s: Write error on %s: %s\n",
+					params.cmdname, params.imagefile,
+					strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			pad -= todo;
 		}
 	}
 
 	(void) munmap((void *)ptr, sbuf.st_size);
 	(void) close (dfd);
-}
-
-void
-usage ()
-{
-	fprintf (stderr, "Usage: %s -l image\n"
-			 "          -l ==> list image header information\n"
-			 "       %s [-x] -A arch -O os -T type -C comp "
-			 "-a addr -e ep -n name -d data_file[:data_file...] image\n",
-		cmdname, cmdname);
-	fprintf (stderr, "          -A ==> set architecture to 'arch'\n"
-			 "          -O ==> set operating system to 'os'\n"
-			 "          -T ==> set image type to 'type'\n"
-			 "          -C ==> set compression type 'comp'\n"
-			 "          -a ==> set load address to 'addr' (hex)\n"
-			 "          -e ==> set entry point to 'ep' (hex)\n"
-			 "          -n ==> set image name to 'name'\n"
-			 "          -d ==> use image data from 'datafile'\n"
-			 "          -x ==> set XIP (execute in place)\n"
-		);
-	exit (EXIT_FAILURE);
-}
-
-static void
-print_header (image_header_t *hdr)
-{
-	time_t timestamp;
-	uint32_t size;
-
-	timestamp = (time_t)ntohl(hdr->ih_time);
-	size = ntohl(hdr->ih_size);
-
-	printf ("Image Name:   %.*s\n", IH_NMLEN, hdr->ih_name);
-	printf ("Created:      %s", ctime(&timestamp));
-	printf ("Image Type:   "); print_type(hdr);
-	printf ("Data Size:    %d Bytes = %.2f kB = %.2f MB\n",
-		size, (double)size / 1.024e3, (double)size / 1.048576e6 );
-	printf ("Load Address: 0x%08X\n", ntohl(hdr->ih_load));
-	printf ("Entry Point:  0x%08X\n", ntohl(hdr->ih_ep));
-
-	if (hdr->ih_type == IH_TYPE_MULTI || hdr->ih_type == IH_TYPE_SCRIPT) {
-		int i, ptrs;
-		uint32_t pos;
-		uint32_t *len_ptr = (uint32_t *) (
-					(unsigned long)hdr + sizeof(image_header_t)
-				);
-
-		/* determine number of images first (to calculate image offsets) */
-		for (i=0; len_ptr[i]; ++i)	/* null pointer terminates list */
-			;
-		ptrs = i;		/* null pointer terminates list */
-
-		pos = sizeof(image_header_t) + ptrs * sizeof(long);
-		printf ("Contents:\n");
-		for (i=0; len_ptr[i]; ++i) {
-			size = ntohl(len_ptr[i]);
-
-			printf ("   Image %d: %8d Bytes = %4d kB = %d MB\n",
-				i, size, size>>10, size>>20);
-			if (hdr->ih_type == IH_TYPE_SCRIPT && i > 0) {
-				/*
-				 * the user may need to know offsets
-				 * if planning to do something with
-				 * multiple files
-				 */
-				printf ("    Offset = %08X\n", pos);
-			}
-			/* copy_file() will pad the first files to even word align */
-			size += 3;
-			size &= ~3;
-			pos += size;
-		}
-	}
-}
-
-
-static void
-print_type (image_header_t *hdr)
-{
-	printf ("%s %s %s (%s)\n",
-		put_arch (hdr->ih_arch),
-		put_os   (hdr->ih_os  ),
-		put_type (hdr->ih_type),
-		put_comp (hdr->ih_comp)
-	);
-}
-
-static char *put_arch (int arch)
-{
-	return (put_table_entry(arch_name, "Unknown Architecture", arch));
-}
-
-static char *put_os (int os)
-{
-	return (put_table_entry(os_name, "Unknown OS", os));
-}
-
-static char *put_type (int type)
-{
-	return (put_table_entry(type_name, "Unknown Image", type));
-}
-
-static char *put_comp (int comp)
-{
-	return (put_table_entry(comp_name, "Unknown Compression", comp));
-}
-
-static char *put_table_entry (table_entry_t *table, char *msg, int type)
-{
-	for (; table->val>=0; ++table) {
-		if (table->val == type)
-			return (table->lname);
-	}
-	return (msg);
-}
-
-static int get_arch(char *name)
-{
-	return (get_table_entry(arch_name, "CPU", name));
-}
-
-
-static int get_comp(char *name)
-{
-	return (get_table_entry(comp_name, "Compression", name));
-}
-
-
-static int get_os (char *name)
-{
-	return (get_table_entry(os_name, "OS", name));
-}
-
-
-static int get_type(char *name)
-{
-	return (get_table_entry(type_name, "Image", name));
-}
-
-static int get_table_entry (table_entry_t *table, char *msg, char *name)
-{
-	table_entry_t *t;
-	int first = 1;
-
-	for (t=table; t->val>=0; ++t) {
-		if (t->sname && strcasecmp(t->sname, name)==0)
-			return (t->val);
-	}
-	fprintf (stderr, "\nInvalid %s Type - valid names are", msg);
-	for (t=table; t->val>=0; ++t) {
-		if (t->sname == NULL)
-			continue;
-		fprintf (stderr, "%c %s", (first) ? ':' : ',', t->sname);
-		first = 0;
-	}
-	fprintf (stderr, "\n");
-	return (-1);
 }

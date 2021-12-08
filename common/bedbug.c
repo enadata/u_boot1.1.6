@@ -2,8 +2,6 @@
 
 #include <common.h>
 
-#if (CONFIG_COMMANDS & CFG_CMD_BEDBUG)
-
 #include <linux/ctype.h>
 #include <bedbug/bedbug.h>
 #include <bedbug/ppc.h>
@@ -74,7 +72,7 @@ int downstring __P ((char *));
  *			F_INSTR		- output raw instruction.
  *			F_LINENO	- show line # info if available.
  *
- * Returns TRUE if the area was successfully disassembled or FALSE if
+ * Returns true if the area was successfully disassembled or false if
  * a problem was encountered with accessing the memory.
  */
 
@@ -139,8 +137,8 @@ int disppc (unsigned char *memaddr, unsigned char *virtual, int num_instr,
 	for (i = 0; i < num_instr; ++i, memaddr += 4, ctx.virtual += 4) {
 #ifdef USE_SOURCE_CODE
 		if (ctx.flags & F_LINENO) {
-			if ((line_info_from_addr ((Elf32_Word) ctx.virtual, filename,
-									  funcname, &line_no) == TRUE) &&
+			if ((line_info_from_addr ((Elf32_Word) ctx.virtual,
+				filename, funcname, &line_no) == true) &&
 				((line_no != last_line_no) ||
 				 (strcmp (last_funcname, funcname) != 0))) {
 				print_source_line (filename, funcname, line_no, pfunc);
@@ -156,15 +154,15 @@ int disppc (unsigned char *memaddr, unsigned char *virtual, int num_instr,
 #ifdef USE_SOURCE_CODE
 		if (ctx.flags & F_SYMBOL) {
 			if ((symname =
-				 symbol_name_from_addr ((Elf32_Word) ctx.virtual,
-										TRUE, 0)) != 0) {
+				 symbol_name_from_addr((Elf32_Word) ctx.virtual,
+						true, 0)) != 0) {
 				cursym = symname;
 				symoffset = 0;
 			} else {
 				if ((cursym == 0) &&
 					((symname =
-					  symbol_name_from_addr ((Elf32_Word) ctx.virtual,
-											 FALSE, &symoffset)) != 0)) {
+					  symbol_name_from_addr((Elf32_Word) ctx.virtual,
+						false, &symoffset)) != 0)) {
 					cursym = symname;
 				} else {
 					symoffset += 4;
@@ -207,7 +205,8 @@ int disppc (unsigned char *memaddr, unsigned char *virtual, int num_instr,
 		}
 
 		if (((ctx.flags & F_SIMPLE) == 0) ||
-			(ctx.op->hfunc == 0) || ((*ctx.op->hfunc) (&ctx) == FALSE)) {
+			(ctx.op->hfunc == 0) ||
+			((*ctx.op->hfunc) (&ctx) == false)) {
 			sprintf (&ctx.data[ctx.datalen], "%-7s ", ctx.op->name);
 			ctx.datalen += 8;
 			print_operands (&ctx);
@@ -216,7 +215,7 @@ int disppc (unsigned char *memaddr, unsigned char *virtual, int num_instr,
 		(*pfunc) (ctx.data);
 	}
 
-	return TRUE;
+	return true;
 }								/* disppc */
 
 
@@ -366,10 +365,10 @@ int print_operands (struct ppc_ctx *ctx)
  *	value		The address of an unsigned long to be filled in
  *			with the value of the operand if it is found.  This
  *			will only be filled in if the function returns
- *			TRUE.  This may be passed as 0 if the value is
+ *			true.  This may be passed as 0 if the value is
  *			not required.
  *
- * Returns TRUE if the operand was found or FALSE if it was not.
+ * Returns true if the operand was found or false if it was not.
  */
 
 int get_operand_value (struct opcode *op, unsigned long instr,
@@ -381,7 +380,7 @@ int get_operand_value (struct opcode *op, unsigned long instr,
   /*------------------------------------------------------------*/
 
 	if (field > n_operands) {
-		return FALSE;			/* bad operand ?! */
+		return false;			/* bad operand ?! */
 	}
 
 	/* Walk through the operands and list each in order */
@@ -395,10 +394,10 @@ int get_operand_value (struct opcode *op, unsigned long instr,
 		if (value) {
 			*value = (instr >> opr->shift) & ((1 << opr->bits) - 1);
 		}
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }								/* operand_value */
 
 
@@ -651,7 +650,7 @@ int tbr_value (char *name)
  * Arguments:
  *	ctx		A pointer to the disassembler context record.
  *
- * Returns TRUE if the simpler form was printed or FALSE if it was not.
+ * Returns true if the simpler form was printed or false if it was not.
  */
 
 int handle_bc (struct ppc_ctx *ctx)
@@ -671,33 +670,33 @@ int handle_bc (struct ppc_ctx *ctx)
 
   /*------------------------------------------------------------*/
 
-	if (get_operand_value (ctx->op, ctx->instr, O_BO, &bo) == FALSE)
-		return FALSE;
+	if (get_operand_value(ctx->op, ctx->instr, O_BO, &bo) == false)
+		return false;
 
-	if (get_operand_value (ctx->op, ctx->instr, O_BI, &bi) == FALSE)
-		return FALSE;
+	if (get_operand_value(ctx->op, ctx->instr, O_BI, &bi) == false)
+		return false;
 
 	if ((bo == 12) && (bi == 0)) {
 		ctx->op = &blt;
 		sprintf (&ctx->data[ctx->datalen], "%-7s ", ctx->op->name);
 		ctx->datalen += 8;
 		print_operands (ctx);
-		return TRUE;
+		return true;
 	} else if ((bo == 4) && (bi == 10)) {
 		ctx->op = &bne;
 		sprintf (&ctx->data[ctx->datalen], "%-7s ", ctx->op->name);
 		ctx->datalen += 8;
 		print_operands (ctx);
-		return TRUE;
+		return true;
 	} else if ((bo == 16) && (bi == 0)) {
 		ctx->op = &bdnz;
 		sprintf (&ctx->data[ctx->datalen], "%-7s ", ctx->op->name);
 		ctx->datalen += 8;
 		print_operands (ctx);
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }								/* handle_blt */
 
 
@@ -721,7 +720,7 @@ int handle_bc (struct ppc_ctx *ctx)
  *	pfunc		The address of a function to call to print the output.
  *
  *
- * Returns TRUE if it was able to output the line info, or false if it was
+ * Returns true if it was able to output the line info, or false if it was
  * not.
  */
 
@@ -736,7 +735,7 @@ int print_source_line (char *filename, char *funcname,
 	sprintf (out_buf, "%s %s(): line %d", filename, funcname, line_no);
 	(*pfunc) (out_buf);
 
-	return TRUE;
+	return true;
 }								/* print_source_line */
 
 
@@ -1041,14 +1040,14 @@ int downstring (char *s)
  * Arguments:
  *	nextaddr	The address (to be filled in) of the next
  *			instruction to execute.  This will only be a valid
- *			address if TRUE is returned.
+ *			address if true is returned.
  *
  *	step_over	A flag indicating how to compute addresses for
  *			branch statements:
- *			 TRUE  = Step over the branch (next)
- *			 FALSE = step into the branch (step)
+ *			 true  = Step over the branch (next)
+ *			 false = step into the branch (step)
  *
- * Returns TRUE if it was able to compute the address.  Returns FALSE if
+ * Returns true if it was able to compute the address.  Returns false if
  * it has a problem reading the current instruction or one of the registers.
  */
 
@@ -1077,7 +1076,7 @@ int find_next_address (unsigned char *nextaddr, int step_over,
 
 	if (nextaddr == 0 || regs == 0) {
 		printf ("find_next_address: bad args");
-		return FALSE;
+		return false;
 	}
 
 	pc = regs->nip & 0xfffffffc;
@@ -1085,7 +1084,7 @@ int find_next_address (unsigned char *nextaddr, int step_over,
 
 	if ((op = find_opcode (instr)) == (struct opcode *) 0) {
 		printf ("find_next_address: can't parse opcode 0x%lx", instr);
-		return FALSE;
+		return false;
 	}
 
 	ctr = regs->ctr;
@@ -1102,7 +1101,7 @@ int find_next_address (unsigned char *nextaddr, int step_over,
 			!get_operand_value (op, instr, O_BI, &bi) ||
 			!get_operand_value (op, instr, O_AA, &aa) ||
 			!get_operand_value (op, instr, O_LK, &lk))
-			return FALSE;
+			return false;
 
 		if ((addr & (1 << 13)) != 0)
 			addr = addr - (1 << 14);
@@ -1118,7 +1117,7 @@ int find_next_address (unsigned char *nextaddr, int step_over,
 		if (!get_operand_value (op, instr, O_LI, &addr) ||
 			!get_operand_value (op, instr, O_AA, &aa) ||
 			!get_operand_value (op, instr, O_LK, &lk))
-			return FALSE;
+			return false;
 
 		if ((addr & (1 << 23)) != 0)
 			addr = addr - (1 << 24);
@@ -1132,7 +1131,7 @@ int find_next_address (unsigned char *nextaddr, int step_over,
 		if (!get_operand_value (op, instr, O_BO, &bo) ||
 			!get_operand_value (op, instr, O_BI, &bi) ||
 			!get_operand_value (op, instr, O_LK, &lk))
-			return FALSE;
+			return false;
 
 		addr = ctr;
 		aa = 1;
@@ -1145,7 +1144,7 @@ int find_next_address (unsigned char *nextaddr, int step_over,
 		if (!get_operand_value (op, instr, O_BO, &bo) ||
 			!get_operand_value (op, instr, O_BI, &bi) ||
 			!get_operand_value (op, instr, O_LK, &lk))
-			return FALSE;
+			return false;
 
 		addr = lr;
 		aa = 1;
@@ -1229,12 +1228,12 @@ int find_next_address (unsigned char *nextaddr, int step_over,
 		step = next = pc + 4;
 	}
 
-	if (step_over == TRUE)
+	if (step_over == true)
 		*(unsigned long *) nextaddr = next;
 	else
 		*(unsigned long *) nextaddr = step;
 
-	return TRUE;
+	return true;
 }								/* find_next_address */
 
 
@@ -1252,5 +1251,3 @@ int find_next_address (unsigned char *nextaddr, int step_over,
  * warranties of merchantability and fitness for a particular
  * purpose.
  */
-
-#endif	/* CONFIG_COMMANDS & CFG_CMD_BEDBUG */

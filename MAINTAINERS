@@ -1,572 +1,475 @@
-#########################################################################
-#									#
-# Regular Maintainers for U-Boot board support:				#
-#									#
-# For any board without permanent maintainer, please contact		#
-#	Wolfgang Denk <wd@denx.de>					#
-# and Cc: the <U-Boot-Users@lists.sourceforge.net> mailing lists.	#
-#									#
-# Note: lists sorted by Maintainer Name					#
-#########################################################################
-
-
-#########################################################################
-# PowerPC Systems:							#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Greg Allen <gallen@arlut.utexas.edu>
-
-	UTX8245			MPC8245
-
-Pantelis Antoniou <panto@intracom.gr>
-
-	NETVIA			MPC8xx
-
-Reinhard Arlt <reinhard.arlt@esd-electronics.com>
-
-	cpci5200		MPC5200
-	pf5200			MPC5200
-
-	CPCI750			PPC750FX/GX
-
-Yuli Barcohen <yuli@arabellasw.com>
-
-	Adder			MPC87x/MPC852T
-	ep8248			MPC8248
-	ISPAN			MPC8260
-	MPC8260ADS		MPC826x/MPC827x/MPC8280
-	Rattler			MPC8248
-	ZPC1900			MPC8265
-
-Jerry Van Baren <gerald.vanbaren@smiths-aerospace.com>
-
-	sacsng			MPC8260
-
-Oliver Brown <obrown@adventnetworks.com>
-
-	gw8260			MPC8260
-
-Conn Clark <clark@esteem.com>
-
-	ESTEEM192E		MPC8xx
-
-Kári Davíðsson <kd@flaga.is>
-
-	FLAGADM			MPC823
-
-Torsten Demke <torsten.demke@fci.com>
-
-	eXalion			MPC824x
-
-Wolfgang Denk <wd@denx.de>
-
-	IceCube_5100		MGT5100
-	IceCube_5200		MPC5200
-
-	AMX860			MPC860
-	ETX094			MPC850
-	FPS850L			MPC850
-	FPS860L			MPC860
-	ICU862			MPC862
-	IP860			MPC860
-	IVML24			MPC860
-	IVML24_128		MPC860
-	IVML24_256		MPC860
-	IVMS8			MPC860
-	IVMS8_128		MPC860
-	IVMS8_256		MPC860
-	LANTEC			MPC850
-	LWMON			MPC823
-	NC650			MPC852
-	R360MPI			MPC823
-	RMU			MPC850
-	RRvision		MPC823
-	SM850			MPC850
-	SPD823TS		MPC823
-	TQM823L			MPC823
-	TQM823L_LCD		MPC823
-	TQM850L			MPC850
-	TQM855L			MPC855
-	TQM860L			MPC860
-	TQM860L_FEC		MPC860
-	c2mon			MPC855
-	hermes			MPC860
-	lwmon			MPC823
-	pcu_e			MPC855
-
-	CU824			MPC8240
-	Sandpoint8240		MPC8240
-	SL8245			MPC8245
-
-	ATC			MPC8250
-	PM825			MPC8250
-
-	TQM8255			MPC8255
-
-	CPU86			MPC8260
-	PM826			MPC8260
-	TQM8260			MPC8260
-
-	P3G4			MPC7410
-
-	PCIPPC2			MPC750
-	PCIPPC6			MPC750
-
-	EXBITGEN		PPC405GP
-
-Jon Diekema <jon.diekema@smiths-aerospace.com>
-
-	sbc8260			MPC8260
-
-Dave Ellis <DGE@sixnetio.com>
-
-	SXNI855T		MPC8xx
-
-Thomas Frieden <ThomasF@hyperion-entertainment.com>
-
-	AmigaOneG3SE		MPC7xx
-
-Matthias Fuchs <matthias.fuchs@esd-electronics.com>
-
-	ADCIOP			IOP480 (PPC401)
-	APC405			PPC405GP
-	AR405			PPC405GP
-	ASH405			PPC405EP
-	CANBT			PPC405CR
-	CPCI2DP			PPC405GP
-	CPCI405			PPC405GP
-	CPCI4052		PPC405GP
-	CPCI405AB		PPC405GP
-	CPCI405DT		PPC405GP
-	CPCI440			PPC440GP
-	CPCIISER4		PPC405GP
-	DASA_SIM		IOP480 (PPC401)
-	DP405			PPC405EP
-	DU405			PPC405GP
-	G2000			PPC405EP
-	HH405			PPC405EP
-	HUB405			PPC405EP
-	OCRTC			PPC405GP
-	ORSG			PPC405GP
-	PCI405			PPC405GP
-	PLU405			PPC405EP
-	PMC405			PPC405GP
-	VOH405			PPC405EP
-	VOM405			PPC405EP
-	WUH405			PPC405EP
-	CMS700                  PPC405EP
-
-Frank Gottschling <fgottschling@eltec.de>
-
-	MHPC			MPC8xx
-
-	BAB7xx			MPC740/MPC750
-
-Wolfgang Grandegger <wg@denx.de>
-
-	CCM			MPC855
-
-	PN62			MPC8240
-
-	IPHASE4539		MPC8260
-	SCM			MPC8260
-
-Howard Gray <mvsensor@matrix-vision.de>
-
-	MVS1			MPC823
-
-Klaus Heydeck <heydeck@kieback-peter.de>
-
-	KUP4K			MPC855
-	KUP4X			MPC859
-
-Murray Jensen <Murray.Jensen@csiro.au>
-
-	cogent_mpc8xx		MPC8xx
-
-	cogent_mpc8260		MPC8260
-	hymod			MPC8260
-
-Brad Kemp <Brad.Kemp@seranoa.com>
-
-	ppmc8260		MPC8260
-
-Sangmoon Kim <dogoil@etinsys.com>
-
-	debris			MPC8245
-	KVME080			MPC8245
-
-Thomas Lange <thomas@corelatus.se>
-
-	GTH			MPC860
-
-The LEOX team <team@leox.org>
-
-	ELPT860			MPC860T
-
-Nye Liu <nyet@zumanetworks.com>
-
-	ZUMA			MPC7xx_74xx
-
-Jon Loeliger <jdl@freescale.com>
-
-	MPC8540ADS		MPC8540
-	MPC8560ADS		MPC8560
-	MPC8541CDS		MPC8541
-	MPC8555CDS		MPC8555
-
-	MPC8641HPCN		MPC8641D
-
-Dan Malek <dan@embeddededge.com>
-
-	STxGP3			MPC85xx
-	STxXTc			MPC8xx
-
-Eran Man <eran@nbase.co.il>
-
-	EVB64260_750CX		MPC750CX
-
-Andrea "llandre" Marson <andrea.marson@dave-tech.it>
-
-	PPChameleonEVB	PPC405EP
-
-Reinhard Meyer <r.meyer@emk-elektronik.de>
-
-	TOP860			MPC860T
-	TOP5200			MPC5200
-
-Tolunay Orkun <torkun@nextio.com>
-
-	csb272			PPC405GP
-	csb472			PPC405GP
-
-John Otken <jotken@softadvances.com>
-
-	luan			PPC440SP
-
-Keith Outwater <Keith_Outwater@mvis.com>
-
-	GEN860T			MPC860T
-	GEN860T_SC		MPC860T
-
-Frank Panno <fpanno@delphintech.com>
-
-	ep8260			MPC8260
-
-Peter Pearse <peter.pearse@arm.com>
-	integratorcp		All current ARM supplied &
-				supported core modules
-				- see http://www.arm.com
-				/products/DevTools
-				/Hardware_Platforms.html
-	versatile		ARM926EJ-S
-	versatile		ARM926EJ-S
-
-Denis Peter <d.peter@mpl.ch>
-
-	MIP405			PPC4xx
-	PIP405			PPC4xx
-
-Daniel Poirot <dan.poirot@windriver.com>
-
-	sbc8240			MPC8240
-	sbc405			PPC405GP
-
-Stefan Roese <sr@denx.de>
-
-	uc100			MPC857
-
-	TQM85xx			MPC8540/8541/8555/8560
-
-	bamboo			PPC440EP
-	bunbinga		PPC405EP
-	ebony			PPC440GP
-	ocotea			PPC440GX
-	p3p440			PPC440GP
-	pcs440ep		PPC440EP
-	sequoia			PPC440EPx
-	sycamore		PPC405GPr
-	walnut			PPC405GP
-	yellowstone		PPC440GR
-	yosemite		PPC440EP
-
-Yusdi Santoso <yusdi_santoso@adaptec.com>
-
-	HIDDEN_DRAGON	MPC8241/MPC8245
-
-Travis Sawyer (travis.sawyer@sandburst.com>
-
-	KAREF			PPC440GX
-	METROBOX		PPC440GX
-	XPEDITE1K		PPC440GX
-
-Peter De Schrijver <p2@mind.be>
-
-	ML2			PPC4xx
-
-Erik Theisen <etheisen@mindspring.com>
-
-	W7OLMC			PPC4xx
-	W7OLMG			PPC4xx
-
-Jim Thompson <jim@musenki.com>
-
-	MUSENKI			MPC8245/8241
-	Sandpoint8245		MPC8245
-
-Rune Torgersen <runet@innovsys.com>
-
-	MPC8266ADS		MPC8266
-
-
-David Updegraff <dave@cray.com>
-
-	CRAYL1			PPC4xx
-
-Josef Wagner <Wagner@Microsys.de>
-
-	CPC45			MPC8245
-	PM520			MPC5200
-
-Stephen Williams <steve@icarus.com>
-
-	JSE			PPC405GPr
-
-John Zhan <zhanz@sinovee.com>
-
-	svm_sc8xx		MPC8xx
-
--------------------------------------------------------------------------
-
-Unknown / orphaned boards:
-
-	ADS860			MPC8xx
-	FADS823			MPC8xx
-	FADS850SAR		MPC8xx
-	FADS860T		MPC8xx
-	GENIETV			MPC8xx
-	IAD210			MPC8xx
-	MBX			MPC8xx
-	MBX860T			MPC8xx
-	NX823			MPC8xx
-	RPXClassic		MPC8xx
-	RPXlite			MPC8xx
-
-	ERIC			PPC4xx
-
-	MOUSSE			MPC824x
-
-	RPXsuper		MPC8260
-	rsdproto		MPC8260
-
-	EVB64260		MPC7xx_74xx
-
-
-#########################################################################
-# ARM Systems:								#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Rowel Atienza <rowel@diwalabs.com>
-
-	armadillo		ARM720T
-
-Rishi Bhattacharya <rishi@ti.com>
-
-	omap5912osk		ARM926EJS
-
-Cliff Brake <cliff.brake@gmail.com>
-
-	pxa255_idp		xscale
-
-Rick Bronson <rick@efn.org>
-
-	AT91RM9200DK		at91rm9200
-
-George G. Davis <gdavis@mvista.com>
-
-	assabet			SA1100
-	gcplus			SA1100
-
-Thomas Elste <info@elste.org>
-
-	modnet50		ARM720T (NET+50)
-
-Peter Figuli <peposh@etc.sk>
-
-	wepep250		xscale
-
-Marius Gröger <mag@sysgo.de>
-
-	impa7			ARM720T (EP7211)
-	ep7312			ARM720T (EP7312)
-
-Kshitij Gupta <kshitij@ti.com>
-
-	omap1510inn		ARM925T
-	omap1610inn		ARM926EJS
-
-Kyle Harris <kharris@nexus-tech.net>
-
-	lubbock			xscale
-	cradle			xscale
-	ixdp425			xscale
-
-Gary Jennejohn <gj@denx.de>
-
-	smdk2400		ARM920T
-	trab			ARM920T
-
-Nishant Kamat <nskamat@ti.com>
-
-	omap1610h2		ARM926EJS
-
-Prakash Kumar <prakash@embedx.com>
-
-	cerf250			xscale
-
-David Müller <d.mueller@elsoft.ch>
-
-	smdk2410		ARM920T
-	VCMA9			ARM920T
-
-Rolf Offermanns <rof@sysgo.de>
-
-	shannon			SA1100
-
-Dave Peverley <dpeverley@mpc-data.co.uk>
-
-	omap730p2		ARM926EJS
-
-Stefan Roese <sr@denx.de>
-
-	ixdpg425		xscale
-	pdnb3			xscale
-
-Robert Schwebel <r.schwebel@pengutronix.de>
-
-	csb226			xscale
-	innokom			xscale
-
-Andrea Scian <andrea.scian@dave-tech.it>
-
-	B2			ARM7TDMI (S3C44B0X)
-
-Greg Ungerer <greg.ungerer@opengear.com>
-
-	cm4008			ks8695p
-	cm4116			ks8695p
-	cm4148			ks8695p
-
-Richard Woodruff <r-woodruff2@ti.com>
-
-	omap2420h4		ARM1136EJS
-
-Alex Züpke <azu@sysgo.de>
-
-	lart			SA1100
-	dnp1110			SA1110
-
-#########################################################################
-# x86 Systems:								#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Daniel Engström <daniel@omicron.se>
-
-	sc520_cdp		x86
-
-#########################################################################
-# MIPS Systems:								#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Wolfgang Denk <wd@denx.de>
-
-	incaip			MIPS32 4Kc
-	purple			MIPS64 5Kc
-
-Thomas Lange <thomas@corelatus.se>
-	dbau1x00		MIPS32 Au1000
-	gth2			MIPS32 Au1000
-
-#########################################################################
-# Nios-32 Systems:							#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Stephan Linz <linz@li-pro.net>
-
-	DK1S10			Nios-32
-	ADNPESC1		Nios-32
-
-Scott McNutt <smcnutt@psyent.com>
-
-	DK1C20			Nios-32
-
-#########################################################################
-# Nios-II Systems:							#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Scott McNutt <smcnutt@psyent.com>
-
-	PCI5441			Nios-II
-	PK1C20			Nios-II
-	EP1C20			Nios-II
-	EP1S10			Nios-II
-	EP1S40			Nios-II
-
-#########################################################################
-# MicroBlaze Systems:							#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Yasushi Shoji <yashi@atmark-techno.com>
-
-	SUZAKU			MicroBlaze
-
-#########################################################################
-# Coldfire Systems:							#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Matthias Fuchs <matthias.fuchs@esd-electronics.com>
-
-	TASREG			MCF5249
-
-Zachary P. Landau <zachary.landau@labxtechnologies.com>
-
-	r5200			mcf52x2
-
-#########################################################################
-# AVR32 Systems:							#
-#									#
-# Maintainer Name, Email Address					#
-#	Board			CPU					#
-#########################################################################
-
-Haavard Skinnemoen <hskinnemoen@atmel.com>
-
-	ATSTK1000		AT32AP7000
-
-#########################################################################
-# End of MAINTAINERS list						#
-#########################################################################
+Descriptions of section entries:
+
+	P: Person (obsolete)
+	M: Mail patches to: FullName <address@domain>
+	L: Mailing list that is relevant to this area
+	W: Web-page with status/info
+	Q: Patchwork web based patch tracking system site
+	T: SCM tree type and location.
+	   Type is one of: git, hg, quilt, stgit, topgit
+	S: Status, one of the following:
+	   Supported:	Someone is actually paid to look after this.
+	   Maintained:	Someone actually looks after it.
+	   Odd Fixes:	It has a maintainer but they don't have time to do
+			much other than throw the odd patch in. See below..
+	   Orphan:	No current maintainer [but maybe you could take the
+			role as you write your new code].
+	   Obsolete:	Old code. Something tagged obsolete generally means
+			it has been replaced by a better system and you
+			should be using that.
+	F: Files and directories with wildcard patterns.
+	   A trailing slash includes all files and subdirectory files.
+	   F:	drivers/net/	all files in and below drivers/net
+	   F:	drivers/net/*	all files in drivers/net, but not below
+	   F:	*/net/*		all files in "any top level directory"/net
+	   One pattern per line.  Multiple F: lines acceptable.
+	N: Files and directories with regex patterns.
+	   N:	[^a-z]tegra	all files whose path contains the word tegra
+	   One pattern per line.  Multiple N: lines acceptable.
+	   scripts/get_maintainer.pl has different behavior for files that
+	   match F: pattern and matches of N: patterns.  By default,
+	   get_maintainer will not look at git log history when an F: pattern
+	   match occurs.  When an N: match occurs, git log history is used
+	   to also notify the people that have git commit signatures.
+	X: Files and directories that are NOT maintained, same rules as F:
+	   Files exclusions are tested before file matches.
+	   Can be useful for excluding a specific subdirectory, for instance:
+	   F:	net/
+	   X:	net/ipv6/
+	   matches all files in and below net excluding net/ipv6/
+	K: Keyword perl extended regex pattern to match content in a
+	   patch or file.  For instance:
+	   K: of_get_profile
+	      matches patches or files that contain "of_get_profile"
+	   K: \b(printk|pr_(info|err))\b
+	      matches patches or files that contain one or more of the words
+	      printk, pr_info or pr_err
+	   One regex pattern per line.  Multiple K: lines acceptable.
+
+Note: For the hard of thinking, this list is meant to remain in alphabetical
+order. If you could add yourselves to it in alphabetical order that would be
+so much easier [Ed]
+
+Maintainers List (try to look for most precise areas first)
+
+		-----------------------------------
+ARC
+M:	Alexey Brodkin <alexey.brodkin@synopsys.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-arc.git
+F:	arch/arc/
+
+ARM
+M:	Albert Aribaud <albert.u.boot@aribaud.net>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-arm.git
+F:	arch/arm/
+
+ARM ALTERA SOCFPGA
+M:	Marek Vasut <marex@denx.de>
+S:	Maintainted
+T:	git git://git.denx.de/u-boot-socfpga.git
+F:	arch/arm/cpu/armv7/socfpga/
+F:	board/altera/socfpga/
+
+ARM ATMEL AT91
+M:	Andreas BieÃŸmann <andreas@biessmann.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-atmel.git
+F:	arch/arm/mach-at91/
+
+ARM BROADCOM BCM283X
+M:	Stephen Warren <swarren@wwwdotorg.org>
+S:	Maintained
+F:	arch/arm/mach-bcm283x/
+F:	drivers/gpio/bcm2835_gpio.c
+F:	drivers/mmc/bcm2835_sdhci.c
+F:	drivers/serial/serial_bcm283x_mu.c
+F:	drivers/video/bcm2835.c
+F:	include/dm/platform_data/serial_bcm283x_mu.h
+
+ARM FREESCALE IMX
+M:	Stefano Babic <sbabic@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-imx.git
+F:	arch/arm/cpu/arm1136/mx*/
+F:	arch/arm/cpu/arm926ejs/mx*/
+F:	arch/arm/cpu/arm926ejs/imx/
+F:	arch/arm/cpu/armv7/mx*/
+F:	arch/arm/cpu/armv7/vf610/
+F:	arch/arm/cpu/imx-common/
+F:	arch/arm/include/asm/arch-imx/
+F:	arch/arm/include/asm/arch-mx*/
+F:	arch/arm/include/asm/arch-vf610/
+F:	arch/arm/include/asm/imx-common/
+F:	board/freescale/*mx*/
+
+ARM HISILICON
+M:	Peter Griffin <peter.griffin@linaro.org>
+S:	Maintained
+F:	arch/arm/cpu/armv8/hisilicon
+F:	arm/include/asm/arch-hi6220/
+
+ARM MARVELL KIRKWOOD ARMADA-XP ARMADA-38X
+M:	Prafulla Wadaskar <prafulla@marvell.com>
+M:	Luka Perkov <luka.perkov@sartura.hr>
+M:	Stefan Roese <sr@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-marvell.git
+F:	arch/arm/mach-kirkwood/
+F:	arch/arm/mach-mvebu/
+
+ARM MARVELL PXA
+M:	Marek Vasut <marex@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-pxa.git
+F:	arch/arm/cpu/pxa/
+F:	arch/arm/include/asm/arch-pxa/
+
+ARM RENESAS RMOBILE/R-CAR
+M:	Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-sh.git
+F:	arch/arm/mach-rmobile/
+
+ARM ROCKCHIP
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-rockchip.git
+F:	arch/arm/mach-rockchip/
+
+ARM SAMSUNG
+M:	Minkyu Kang <mk7.kang@samsung.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-samsung.git
+F:	arch/arm/cpu/arm920t/s3c24x0/
+F:	arch/arm/mach-exynos/
+F:	arch/arm/mach-s5pc1xx/
+F:	arch/arm/cpu/armv7/s5p-common/
+F:	arch/arm/include/asm/arch-s3c24x0/
+
+ARM SNAPDRAGON
+M:	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>
+S:	Maintained
+F:	arch/arm/mach-snapdragon/
+
+ARM STM SPEAR
+#M:	Vipin Kumar <vipin.kumar@st.com>
+S:	Orphaned (Since 2016-02)
+T:	git git://git.denx.de/u-boot-stm.git
+F:	arch/arm/cpu/arm926ejs/spear/
+F:	arch/arm/include/asm/arch-spear/
+
+ARM STM STV0991
+M:	Vikas Manocha <vikas.manocha@st.com>
+S:	Maintained
+F:	arch/arm/cpu/armv7/stv0991/
+F:	arch/arm/include/asm/arch-stv0991/
+
+ARM SUNXI
+M:	Ian Campbell <ijc@hellion.org.uk>
+M:	Hans De Goede <hdegoede@redhat.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-sunxi.git
+F:	arch/arm/cpu/armv7/sunxi/
+F:	arch/arm/include/asm/arch-sunxi/
+
+ARM TEGRA
+M:	Tom Warren <twarren@nvidia.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-tegra.git
+F:	arch/arm/mach-tegra/
+F:	arch/arm/include/asm/arch-tegra*/
+
+ARM TI
+M:	Tom Rini <trini@konsulko.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-ti.git
+F:	arch/arm/mach-davinci/
+F:	arch/arm/mach-keystone/
+F:	arch/arm/cpu/arm926ejs/omap/
+F:	arch/arm/cpu/armv7/omap*/
+F:	arch/arm/include/asm/arch-omap*/
+F:	arch/arm/include/asm/ti-common/
+
+ARM UNIPHIER
+M:	Masahiro Yamada <yamada.masahiro@socionext.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-uniphier.git
+F:	arch/arm/mach-uniphier/
+F:	configs/uniphier_*_defconfig
+N:	uniphier
+
+ARM ZYNQ
+M:	Michal Simek <monstr@monstr.eu>
+S:	Maintained
+F:	arch/arm/cpu/armv7/zynq/
+F:	arch/arm/include/asm/arch-zynq/
+
+ARM ZYNQMP
+M:	Michal Simek <michal.simek@xilinx.com>
+S:	Maintained
+F:	arch/arm/cpu/armv8/zynqmp/
+F:	arch/arm/include/asm/arch-zynqmp/
+
+AVR32
+M:	Andreas BieÃŸmann <andreas@biessmann.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-avr32.git
+F:	arch/avr32/
+
+BLACKFIN
+M:	Sonic Zhang <sonic.adi@gmail.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-blackfin.git
+F:	arch/blackfin/
+
+BUILDMAN
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	tools/buildman/
+
+CFI FLASH
+M:	Stefan Roese <sr@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-cfi-flash.git
+F:	drivers/mtd/cfi_flash.c
+F:	drivers/mtd/jedec_flash.c
+
+COLDFIRE
+M:	Huan Wang <alison.wang@freescale.com>
+M:	Angelo Dureghello <angelo@sysam.it>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-coldfire.git
+F:	arch/m68k/
+
+DFU
+M:	Lukasz Majewski <l.majewski@samsung.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-dfu.git
+F:	drivers/dfu/
+F:	drivers/usb/gadget/
+
+DRIVER MODEL
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-dm.git
+F:	drivers/core/
+F:	include/dm/
+F:	test/dm/
+
+EFI PAYLOAD
+M:	Alexander Graf <agraf@suse.de>
+S:	Maintained
+F:	include/efi_loader.h
+F:	lib/efi_loader/
+F:	cmd/bootefi.c
+
+FLATTENED DEVICE TREE
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-fdt.git
+F:	lib/fdtdec*
+F:	lib/libfdt/
+F:	include/fdt*
+F:	include/libfdt*
+F.	common/cmd_fdt.c
+F:	common/fdt_support.c
+
+FREEBSD
+M:	Rafal Jaworowski <raj@semihalf.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-freebsd.git
+
+FREESCALE QORIQ
+M:	York Sun <york.sun@nxp.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-fsl-qoriq.git
+
+I2C
+M:	Heiko Schocher <hs@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-i2c.git
+F:	drivers/i2c/
+
+MICROBLAZE
+M:	Michal Simek <monstr@monstr.eu>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-microblaze.git
+F:	arch/microblaze/
+
+MIPS
+M:	Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-mips.git
+F:	arch/mips/
+
+MMC
+M:	Jaehoon Chung <jh80.chung@samsung.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-mmc.git
+F:	drivers/mmc/
+
+OPENRISC
+M:	Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+S:	Maintained
+F:	arch/openrisc/
+
+PATMAN
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	tools/patman/
+
+POWERPC
+M:	Wolfgang Denk <wd@denx.de>
+S:	Maintained
+F:	arch/powerpc/
+
+POWERPC MPC5XXX
+M:	Wolfgang Denk <wd@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-mpc5xxx.git
+F:	arch/powerpc/cpu/mpc5*/
+
+POWERPC MPC8XX
+M:	Wolfgang Denk <wd@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-mpc8xx.git
+F:	arch/powerpc/cpu/mpc8xx/
+
+POWERPC MPC82XX
+M:	Wolfgang Denk <wd@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-mpc82xx.git
+F:	arch/powerpc/cpu/mpc82*/
+
+POWERPC MPC83XX
+#M:	Kim Phillips <kim.phillips@freescale.com>
+S:	Orphaned (Since 2016-02)
+T:	git git://git.denx.de/u-boot-mpc83xx.git
+F:	arch/powerpc/cpu/mpc83xx/
+F:	arch/powerpc/include/asm/arch-mpc83xx/
+
+POWERPC MPC85XX
+M:	York Sun <york.sun@nxp.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-mpc85xx.git
+F:	arch/powerpc/cpu/mpc85xx/
+
+POWERPC MPC86XX
+M:	York Sun <york.sun@nxp.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-mpc86xx.git
+F:	arch/powerpc/cpu/mpc86xx/
+
+POWERPC PPC4XX
+M:	Stefan Roese <sr@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-ppc4xx.git
+F:	arch/powerpc/cpu/ppc4xx/
+
+NETWORK
+M:	Joe Hershberger <joe.hershberger@ni.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-net.git
+F:	drivers/net/
+F:	net/
+
+NAND FLASH
+M:	Scott Wood <oss@buserror.net>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-nand-flash.git
+F:	drivers/mtd/nand/
+
+NDS32
+M:	Macpaul Lin <macpaul@andestech.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-nds32.git
+F:	arch/nds32/
+
+NIOS
+M:	Thomas Chou <thomas@wytron.com.tw>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-nios.git
+F:	arch/nios2/
+
+ONENAND
+M:	Lukasz Majewski <l.majewski@samsung.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-onenand.git
+F:	drivers/mtd/onenand/
+
+SANDBOX
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	arch/sandbox/
+
+SH
+M:	Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-sh.git
+F:	arch/sh/
+
+SPARC
+#M:	Francois Retief <fgretief@spaceteq.co.za>
+S:	Orphaned (Since 2016-02)
+T:	git git://git.denx.de/u-boot-sparc.git
+F:	arch/sparc/
+
+SPI
+M:	Jagan Teki <jteki@openedev.com>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-spi.git
+F:	drivers/mtd/spi/
+F:	drivers/spi/
+F:	include/spi*
+
+SPMI
+M:	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>
+S:	Maintained
+F:	drivers/spmi/
+F:	include/spmi/
+
+TQ GROUP
+#M:	Martin Krause <martin.krause@tq-systems.de>
+S:	Orphaned (Since 2016-02)
+T:	git git://git.denx.de/u-boot-tq-group.git
+
+UBI
+M:	Kyungmin Park <kmpark@infradead.org>
+M:	Heiko Schocher <hs@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-ubi.git
+F:	drivers/mtd/ubi/
+
+USB
+M:	Marek Vasut <marex@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-usb.git
+F:	drivers/usb/
+
+VIDEO
+M:	Anatolij Gustschin <agust@denx.de>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-video.git
+F:	drivers/video/
+
+X86
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+T:	git git://git.denx.de/u-boot-x86.git
+F:	arch/x86/
+
+XTENSA
+M:	Max Filippov <jcmvbkbc@gmail.com>
+S:	Maintained
+F:	arch/xtensa/
+
+THE REST
+M:	Tom Rini <trini@konsulko.com>
+L:	u-boot@lists.denx.de
+Q:	http://patchwork.ozlabs.org/project/uboot/list/
+S:	Maintained
+T:	git git://git.denx.de/u-boot.git
+F:	*
+F:	*/

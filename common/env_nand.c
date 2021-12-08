@@ -1,149 +1,123 @@
 /*
+ * (C) Copyright 2000-2010
+ * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * (C) Copyright 2008
+ * Stuart Wood, Lab X Technologies <stuart.wood@labxtechnologies.com>
+ *
  * (C) Copyright 2004
  * Jian Zhang, Texas Instruments, jzhang@ti.com.
-
- * (C) Copyright 2000-2006
- * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  *
  * (C) Copyright 2001 Sysgo Real-Time Solutions, GmbH <www.elinos.com>
  * Andreas Heppel <aheppel@sysgo.de>
-
- * See file CREDITS for list of people who contributed to this
- * project.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
-/* #define DEBUG */
-
 #include <common.h>
-
-#if defined(CFG_ENV_IS_IN_NAND) /* Environment is in Nand Flash */
-
 #include <command.h>
 #include <environment.h>
 #include <linux/stddef.h>
 #include <malloc.h>
+#include <memalign.h>
 #include <nand.h>
+#include <search.h>
+#include <errno.h>
 
-#if ((CONFIG_COMMANDS&(CFG_CMD_ENV|CFG_CMD_NAND)) == (CFG_CMD_ENV|CFG_CMD_NAND))
+#if defined(CONFIG_CMD_SAVEENV) && defined(CONFIG_CMD_NAND)
 #define CMD_SAVEENV
-#elif defined(CFG_ENV_OFFSET_REDUND)
-#error Cannot use CFG_ENV_OFFSET_REDUND without CFG_CMD_ENV & CFG_CMD_NAND
+#elif defined(CONFIG_ENV_OFFSET_REDUND)
+#error CONFIG_ENV_OFFSET_REDUND must have CONFIG_CMD_SAVEENV & CONFIG_CMD_NAND
 #endif
 
-#if defined(CFG_ENV_SIZE_REDUND) && (CFG_ENV_SIZE_REDUND != CFG_ENV_SIZE)
-#error CFG_ENV_SIZE_REDUND should be the same as CFG_ENV_SIZE
+#if defined(CONFIG_ENV_SIZE_REDUND) &&	\
+	(CONFIG_ENV_SIZE_REDUND != CONFIG_ENV_SIZE)
+#error CONFIG_ENV_SIZE_REDUND should be the same as CONFIG_ENV_SIZE
 #endif
 
-#ifdef CONFIG_INFERNO
-#error CONFIG_INFERNO not supported yet
+#ifndef CONFIG_ENV_RANGE
+#define CONFIG_ENV_RANGE	CONFIG_ENV_SIZE
 #endif
 
-int nand_legacy_rw (struct nand_chip* nand, int cmd,
-	    size_t start, size_t len,
-	    size_t * retlen, u_char * buf);
+char *env_name_spec = "NAND";
 
-/* info for NAND chips, defined in drivers/nand/nand.c */
-extern nand_info_t nand_info[];
-
-/* references to names in env_common.c */
-extern uchar default_environment[];
-extern int default_environment_size;
-
-char * env_name_spec = "NAND";
-
-
-#ifdef ENV_IS_EMBEDDED
-extern uchar environment[];
-env_t *env_ptr = (env_t *)(&environment[0]);
+#if defined(ENV_IS_EMBEDDED)
+env_t *env_ptr = &environment;
+#elif defined(CONFIG_NAND_ENV_DST)
+env_t *env_ptr = (env_t *)CONFIG_NAND_ENV_DST;
 #else /* ! ENV_IS_EMBEDDED */
-env_t *env_ptr = 0;
+env_t *env_ptr;
 #endif /* ENV_IS_EMBEDDED */
-
-
-/* local functions */
-#if !defined(ENV_IS_EMBEDDED)
-static void use_default(void);
-#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
-uchar env_get_char_spec (int index)
-{
-	return ( *((uchar *)(gd->env_addr + index)) );
-}
-
-
-/* this is called before nand_init()
- * so we can't read Nand to validate env data.
- * Mark it OK for now. env_relocate() in env_common.c
- * will call our relocate function which will does
- * the real validation.
+/*
+ * This is called before nand_init() so we can't read NAND to
+ * validate env data.
+ *
+ * Mark it OK for now. env_relocate() in env_common.c will call our
+ * relocate function which does the real validation.
  *
  * When using a NAND boot image (like sequoia_nand), the environment
- * can be embedded or attached to the U-Boot image in NAND flash. This way
- * the SPL loads not only the U-Boot image from NAND but also the
- * environment.
+ * can be embedded or attached to the U-Boot image in NAND flash.
+ * This way the SPL loads not only the U-Boot image from NAND but
+ * also the environment.
  */
 int env_init(void)
 {
-#if defined(ENV_IS_EMBEDDED)
-	ulong total;
+#if defined(ENV_IS_EMBEDDED) || defined(CONFIG_NAND_ENV_DST)
 	int crc1_ok = 0, crc2_ok = 0;
-	env_t *tmp_env1, *tmp_env2;
+	env_t *tmp_env1;
 
-	total = CFG_ENV_SIZE;
+#ifdef CONFIG_ENV_OFFSET_REDUND
+	env_t *tmp_env2;
 
+	tmp_env2 = (env_t *)((ulong)env_ptr + CONFIG_ENV_SIZE);
+	crc2_ok = crc32(0, tmp_env2->data, ENV_SIZE) == tmp_env2->crc;
+#endif
 	tmp_env1 = env_ptr;
-	tmp_env2 = (env_t *)((ulong)env_ptr + CFG_ENV_SIZE);
+	crc1_ok = crc32(0, tmp_env1->data, ENV_SIZE) == tmp_env1->crc;
 
-	crc1_ok = (crc32(0, tmp_env1->data, ENV_SIZE) == tmp_env1->crc);
-	crc2_ok = (crc32(0, tmp_env2->data, ENV_SIZE) == tmp_env2->crc);
+	if (!crc1_ok && !crc2_ok) {
+		gd->env_addr	= 0;
+		gd->env_valid	= 0;
 
-	if (!crc1_ok && !crc2_ok)
-		gd->env_valid = 0;
-	else if(crc1_ok && !crc2_ok)
+		return 0;
+	} else if (crc1_ok && !crc2_ok) {
 		gd->env_valid = 1;
-	else if(!crc1_ok && crc2_ok)
+	}
+#ifdef CONFIG_ENV_OFFSET_REDUND
+	else if (!crc1_ok && crc2_ok) {
 		gd->env_valid = 2;
-	else {
+	} else {
 		/* both ok - check serial */
-		if(tmp_env1->flags == 255 && tmp_env2->flags == 0)
+		if (tmp_env1->flags == 255 && tmp_env2->flags == 0)
 			gd->env_valid = 2;
-		else if(tmp_env2->flags == 255 && tmp_env1->flags == 0)
+		else if (tmp_env2->flags == 255 && tmp_env1->flags == 0)
 			gd->env_valid = 1;
-		else if(tmp_env1->flags > tmp_env2->flags)
+		else if (tmp_env1->flags > tmp_env2->flags)
 			gd->env_valid = 1;
-		else if(tmp_env2->flags > tmp_env1->flags)
+		else if (tmp_env2->flags > tmp_env1->flags)
 			gd->env_valid = 2;
 		else /* flags are equal - almost impossible */
 			gd->env_valid = 1;
 	}
 
+	if (gd->env_valid == 2)
+		env_ptr = tmp_env2;
+	else
+#endif
 	if (gd->env_valid == 1)
 		env_ptr = tmp_env1;
-	else if (gd->env_valid == 2)
-		env_ptr = tmp_env2;
-#else /* ENV_IS_EMBEDDED */
-	gd->env_addr  = (ulong)&default_environment[0];
-	gd->env_valid = 1;
-#endif /* ENV_IS_EMBEDDED */
 
-	return (0);
+	gd->env_addr = (ulong)env_ptr->data;
+
+#else /* ENV_IS_EMBEDDED || CONFIG_NAND_ENV_DST */
+	gd->env_addr	= (ulong)&default_environment[0];
+	gd->env_valid	= 1;
+#endif /* ENV_IS_EMBEDDED || CONFIG_NAND_ENV_DST */
+
+	return 0;
 }
 
 #ifdef CMD_SAVEENV
@@ -151,155 +125,291 @@ int env_init(void)
  * The legacy NAND code saved the environment in the first NAND device i.e.,
  * nand_dev_desc + 0. This is also the behaviour using the new NAND code.
  */
-#ifdef CFG_ENV_OFFSET_REDUND
-int saveenv(void)
+static int writeenv(size_t offset, u_char *buf)
 {
-	ulong total;
-	int ret = 0;
+	size_t end = offset + CONFIG_ENV_RANGE;
+	size_t amount_saved = 0;
+	size_t blocksize, len;
+	u_char *char_ptr;
 
-	env_ptr->flags++;
-	total = CFG_ENV_SIZE;
+	blocksize = nand_info[0]->erasesize;
+	len = min(blocksize, (size_t)CONFIG_ENV_SIZE);
 
-	if(gd->env_valid == 1) {
-		puts ("Erasing redundant Nand...");
-		if (nand_erase(&nand_info[0],
-			       CFG_ENV_OFFSET_REDUND, CFG_ENV_SIZE))
-			return 1;
-		puts ("Writing to redundant Nand... ");
-		ret = nand_write(&nand_info[0], CFG_ENV_OFFSET_REDUND, &total,
-				 (u_char*) env_ptr);
-	} else {
-		puts ("Erasing Nand...");
-		if (nand_erase(&nand_info[0],
-			       CFG_ENV_OFFSET, CFG_ENV_SIZE))
-			return 1;
+	while (amount_saved < CONFIG_ENV_SIZE && offset < end) {
+		if (nand_block_isbad(nand_info[0], offset)) {
+			offset += blocksize;
+		} else {
+			char_ptr = &buf[amount_saved];
+			if (nand_write(nand_info[0], offset, &len, char_ptr))
+				return 1;
 
-		puts ("Writing to Nand... ");
-		ret = nand_write(&nand_info[0], CFG_ENV_OFFSET, &total,
-				 (u_char*) env_ptr);
+			offset += blocksize;
+			amount_saved += len;
+		}
 	}
-	if (ret || total != CFG_ENV_SIZE)
+	if (amount_saved != CONFIG_ENV_SIZE)
 		return 1;
 
-	puts ("done\n");
-	gd->env_valid = (gd->env_valid == 2 ? 1 : 2);
-	return ret;
+	return 0;
 }
-#else /* ! CFG_ENV_OFFSET_REDUND */
-int saveenv(void)
+
+struct env_location {
+	const char *name;
+	const nand_erase_options_t erase_opts;
+};
+
+static int erase_and_write_env(const struct env_location *location,
+		u_char *env_new)
 {
-	ulong total;
 	int ret = 0;
 
-	puts ("Erasing Nand...");
-	if (nand_erase(&nand_info[0], CFG_ENV_OFFSET, CFG_ENV_SIZE))
+	if (!nand_info[0])
 		return 1;
 
-	puts ("Writing to Nand... ");
-	total = CFG_ENV_SIZE;
-	ret = nand_write(&nand_info[0], CFG_ENV_OFFSET, &total, (u_char*)env_ptr);
-	if (ret || total != CFG_ENV_SIZE)
+	printf("Erasing %s...\n", location->name);
+	if (nand_erase_opts(nand_info[0], &location->erase_opts))
 		return 1;
 
-	puts ("done\n");
+	printf("Writing to %s... ", location->name);
+	ret = writeenv(location->erase_opts.offset, env_new);
+	puts(ret ? "FAILED!\n" : "OK\n");
+
 	return ret;
 }
-#endif /* CFG_ENV_OFFSET_REDUND */
+
+#ifdef CONFIG_ENV_OFFSET_REDUND
+static unsigned char env_flags;
+#endif
+
+int saveenv(void)
+{
+	int	ret = 0;
+	ALLOC_CACHE_ALIGN_BUFFER(env_t, env_new, 1);
+	int	env_idx = 0;
+	static const struct env_location location[] = {
+		{
+			.name = "NAND",
+			.erase_opts = {
+				.length = CONFIG_ENV_RANGE,
+				.offset = CONFIG_ENV_OFFSET,
+			},
+		},
+#ifdef CONFIG_ENV_OFFSET_REDUND
+		{
+			.name = "redundant NAND",
+			.erase_opts = {
+				.length = CONFIG_ENV_RANGE,
+				.offset = CONFIG_ENV_OFFSET_REDUND,
+			},
+		},
+#endif
+	};
+
+
+	if (CONFIG_ENV_RANGE < CONFIG_ENV_SIZE)
+		return 1;
+
+	ret = env_export(env_new);
+	if (ret)
+		return ret;
+
+#ifdef CONFIG_ENV_OFFSET_REDUND
+	env_new->flags = ++env_flags; /* increase the serial */
+	env_idx = (gd->env_valid == 1);
+#endif
+
+	ret = erase_and_write_env(&location[env_idx], (u_char *)env_new);
+#ifdef CONFIG_ENV_OFFSET_REDUND
+	if (!ret) {
+		/* preset other copy for next write */
+		gd->env_valid = gd->env_valid == 2 ? 1 : 2;
+		return ret;
+	}
+
+	env_idx = (env_idx + 1) & 1;
+	ret = erase_and_write_env(&location[env_idx], (u_char *)env_new);
+	if (!ret)
+		printf("Warning: primary env write failed,"
+				" redundancy is lost!\n");
+#endif
+
+	return ret;
+}
 #endif /* CMD_SAVEENV */
 
-#ifdef CFG_ENV_OFFSET_REDUND
-void env_relocate_spec (void)
+#if defined(CONFIG_SPL_BUILD)
+static int readenv(size_t offset, u_char *buf)
 {
-#if !defined(ENV_IS_EMBEDDED)
-	ulong total;
-	int crc1_ok = 0, crc2_ok = 0;
-	env_t *tmp_env1, *tmp_env2;
-
-	total = CFG_ENV_SIZE;
-
-	tmp_env1 = (env_t *) malloc(CFG_ENV_SIZE);
-	tmp_env2 = (env_t *) malloc(CFG_ENV_SIZE);
-
-	nand_read(&nand_info[0], CFG_ENV_OFFSET, &total,
-		  (u_char*) tmp_env1);
-	nand_read(&nand_info[0], CFG_ENV_OFFSET_REDUND, &total,
-		  (u_char*) tmp_env2);
-
-	crc1_ok = (crc32(0, tmp_env1->data, ENV_SIZE) == tmp_env1->crc);
-	crc2_ok = (crc32(0, tmp_env2->data, ENV_SIZE) == tmp_env2->crc);
-
-	if(!crc1_ok && !crc2_ok)
-		return use_default();
-	else if(crc1_ok && !crc2_ok)
-		gd->env_valid = 1;
-	else if(!crc1_ok && crc2_ok)
-		gd->env_valid = 2;
-	else {
-		/* both ok - check serial */
-		if(tmp_env1->flags == 255 && tmp_env2->flags == 0)
-			gd->env_valid = 2;
-		else if(tmp_env2->flags == 255 && tmp_env1->flags == 0)
-			gd->env_valid = 1;
-		else if(tmp_env1->flags > tmp_env2->flags)
-			gd->env_valid = 1;
-		else if(tmp_env2->flags > tmp_env1->flags)
-			gd->env_valid = 2;
-		else /* flags are equal - almost impossible */
-			gd->env_valid = 1;
-
-	}
-
-	free(env_ptr);
-	if(gd->env_valid == 1) {
-		env_ptr = tmp_env1;
-		free(tmp_env2);
-	} else {
-		env_ptr = tmp_env2;
-		free(tmp_env1);
-	}
-
-#endif /* ! ENV_IS_EMBEDDED */
+	return nand_spl_load_image(offset, CONFIG_ENV_SIZE, buf);
 }
-#else /* ! CFG_ENV_OFFSET_REDUND */
-/*
- * The legacy NAND code saved the environment in the first NAND device i.e.,
- * nand_dev_desc + 0. This is also the behaviour using the new NAND code.
- */
-void env_relocate_spec (void)
+#else
+static int readenv(size_t offset, u_char *buf)
 {
-#if !defined(ENV_IS_EMBEDDED)
-	ulong total;
+	size_t end = offset + CONFIG_ENV_RANGE;
+	size_t amount_loaded = 0;
+	size_t blocksize, len;
+	u_char *char_ptr;
+
+	if (!nand_info[0])
+		return 1;
+
+	blocksize = nand_info[0]->erasesize;
+	len = min(blocksize, (size_t)CONFIG_ENV_SIZE);
+
+	while (amount_loaded < CONFIG_ENV_SIZE && offset < end) {
+		if (nand_block_isbad(nand_info[0], offset)) {
+			offset += blocksize;
+		} else {
+			char_ptr = &buf[amount_loaded];
+			if (nand_read_skip_bad(nand_info[0], offset,
+					       &len, NULL,
+					       nand_info[0]->size, char_ptr))
+				return 1;
+
+			offset += blocksize;
+			amount_loaded += len;
+		}
+	}
+
+	if (amount_loaded != CONFIG_ENV_SIZE)
+		return 1;
+
+	return 0;
+}
+#endif /* #if defined(CONFIG_SPL_BUILD) */
+
+#ifdef CONFIG_ENV_OFFSET_OOB
+int get_nand_env_oob(struct mtd_info *mtd, unsigned long *result)
+{
+	struct mtd_oob_ops ops;
+	uint32_t oob_buf[ENV_OFFSET_SIZE / sizeof(uint32_t)];
 	int ret;
 
-	total = CFG_ENV_SIZE;
-	ret = nand_read(&nand_info[0], CFG_ENV_OFFSET, &total, (u_char*)env_ptr);
-  	if (ret || total != CFG_ENV_SIZE)
-		return use_default();
+	ops.datbuf	= NULL;
+	ops.mode	= MTD_OOB_AUTO;
+	ops.ooboffs	= 0;
+	ops.ooblen	= ENV_OFFSET_SIZE;
+	ops.oobbuf	= (void *)oob_buf;
 
-	if (crc32(0, env_ptr->data, ENV_SIZE) != env_ptr->crc)
-		return use_default();
-#endif /* ! ENV_IS_EMBEDDED */
-}
-#endif /* CFG_ENV_OFFSET_REDUND */
-
-#if !defined(ENV_IS_EMBEDDED)
-static void use_default()
-{
-	puts ("*** Warning - bad CRC or NAND, using default environment\n\n");
-
-	if (default_environment_size > CFG_ENV_SIZE){
-		puts ("*** Error - default environment is too large\n\n");
-		return;
+	ret = mtd->read_oob(mtd, ENV_OFFSET_SIZE, &ops);
+	if (ret) {
+		printf("error reading OOB block 0\n");
+		return ret;
 	}
 
-	memset (env_ptr, 0, sizeof(env_t));
-	memcpy (env_ptr->data,
-			default_environment,
-			default_environment_size);
-	env_ptr->crc = crc32(0, env_ptr->data, ENV_SIZE);
-	gd->env_valid = 1;
+	if (oob_buf[0] == ENV_OOB_MARKER) {
+		*result = oob_buf[1] * mtd->erasesize;
+	} else if (oob_buf[0] == ENV_OOB_MARKER_OLD) {
+		*result = oob_buf[1];
+	} else {
+		printf("No dynamic environment marker in OOB block 0\n");
+		return -ENOENT;
+	}
 
+	return 0;
 }
 #endif
 
-#endif /* CFG_ENV_IS_IN_NAND */
+#ifdef CONFIG_ENV_OFFSET_REDUND
+void env_relocate_spec(void)
+{
+#if !defined(ENV_IS_EMBEDDED)
+	int read1_fail = 0, read2_fail = 0;
+	int crc1_ok = 0, crc2_ok = 0;
+	env_t *ep, *tmp_env1, *tmp_env2;
+
+	tmp_env1 = (env_t *)malloc(CONFIG_ENV_SIZE);
+	tmp_env2 = (env_t *)malloc(CONFIG_ENV_SIZE);
+	if (tmp_env1 == NULL || tmp_env2 == NULL) {
+		puts("Can't allocate buffers for environment\n");
+		set_default_env("!malloc() failed");
+		goto done;
+	}
+
+	read1_fail = readenv(CONFIG_ENV_OFFSET, (u_char *) tmp_env1);
+	read2_fail = readenv(CONFIG_ENV_OFFSET_REDUND, (u_char *) tmp_env2);
+
+	if (read1_fail && read2_fail)
+		puts("*** Error - No Valid Environment Area found\n");
+	else if (read1_fail || read2_fail)
+		puts("*** Warning - some problems detected "
+		     "reading environment; recovered successfully\n");
+
+	crc1_ok = !read1_fail &&
+		(crc32(0, tmp_env1->data, ENV_SIZE) == tmp_env1->crc);
+	crc2_ok = !read2_fail &&
+		(crc32(0, tmp_env2->data, ENV_SIZE) == tmp_env2->crc);
+
+	if (!crc1_ok && !crc2_ok) {
+		set_default_env("!bad CRC");
+		goto done;
+	} else if (crc1_ok && !crc2_ok) {
+		gd->env_valid = 1;
+	} else if (!crc1_ok && crc2_ok) {
+		gd->env_valid = 2;
+	} else {
+		/* both ok - check serial */
+		if (tmp_env1->flags == 255 && tmp_env2->flags == 0)
+			gd->env_valid = 2;
+		else if (tmp_env2->flags == 255 && tmp_env1->flags == 0)
+			gd->env_valid = 1;
+		else if (tmp_env1->flags > tmp_env2->flags)
+			gd->env_valid = 1;
+		else if (tmp_env2->flags > tmp_env1->flags)
+			gd->env_valid = 2;
+		else /* flags are equal - almost impossible */
+			gd->env_valid = 1;
+	}
+
+	free(env_ptr);
+
+	if (gd->env_valid == 1)
+		ep = tmp_env1;
+	else
+		ep = tmp_env2;
+
+	env_flags = ep->flags;
+	env_import((char *)ep, 0);
+
+done:
+	free(tmp_env1);
+	free(tmp_env2);
+
+#endif /* ! ENV_IS_EMBEDDED */
+}
+#else /* ! CONFIG_ENV_OFFSET_REDUND */
+/*
+ * The legacy NAND code saved the environment in the first NAND
+ * device i.e., nand_dev_desc + 0. This is also the behaviour using
+ * the new NAND code.
+ */
+void env_relocate_spec(void)
+{
+#if !defined(ENV_IS_EMBEDDED)
+	int ret;
+	ALLOC_CACHE_ALIGN_BUFFER(char, buf, CONFIG_ENV_SIZE);
+
+#if defined(CONFIG_ENV_OFFSET_OOB)
+	/*
+	 * If unable to read environment offset from NAND OOB then fall through
+	 * to the normal environment reading code below
+	 */
+	if (nand_info[0] && !get_nand_env_oob(nand_info[0],
+					      &nand_env_oob_offset)) {
+		printf("Found Environment offset in OOB..\n");
+	} else {
+		set_default_env("!no env offset in OOB");
+		return;
+	}
+#endif
+
+	ret = readenv(CONFIG_ENV_OFFSET, (u_char *)buf);
+	if (ret) {
+		set_default_env("!readenv() failed");
+		return;
+	}
+
+	env_import(buf, 1);
+#endif /* ! ENV_IS_EMBEDDED */
+}
+#endif /* CONFIG_ENV_OFFSET_REDUND */

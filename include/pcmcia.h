@@ -2,23 +2,7 @@
  * (C) Copyright 2000-2004
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  *
- * See file CREDITS for list of people who contributed to this
- * project.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _PCMCIA_H
@@ -31,43 +15,14 @@
  * Allow configuration to select PCMCIA slot,
  * or try to generate a useful default
  */
-#if ( CONFIG_COMMANDS & CFG_CMD_PCMCIA) || \
-    ((CONFIG_COMMANDS & CFG_CMD_IDE) && \
+#if defined(CONFIG_CMD_PCMCIA) || \
+    (defined(CONFIG_CMD_IDE) && \
 	(defined(CONFIG_IDE_8xx_PCCARD) || defined(CONFIG_IDE_8xx_DIRECT) ) )
 
 #if !defined(CONFIG_PCMCIA_SLOT_A) && !defined(CONFIG_PCMCIA_SLOT_B)
 
-					/* The RPX series use SLOT_B	*/
-#if defined(CONFIG_RPXCLASSIC) || defined(CONFIG_RPXLITE)
-# define CONFIG_PCMCIA_SLOT_B
-#elif defined(CONFIG_ADS)		/* The ADS  board uses SLOT_A	*/
-# define CONFIG_PCMCIA_SLOT_A
-#elif defined(CONFIG_FADS)		/* The FADS series are a mess	*/
-# if defined(CONFIG_MPC86x) || defined(CONFIG_MPC821)
-#  define CONFIG_PCMCIA_SLOT_A
-# else
-#  define CONFIG_PCMCIA_SLOT_B
-# endif
-#elif defined(CONFIG_TQM8xxL) || defined(CONFIG_SVM_SC8xx)
+#if defined(CONFIG_TQM8xxL)
 # define	CONFIG_PCMCIA_SLOT_B	/* The TQM8xxL use SLOT_B	*/
-#elif defined(CONFIG_SPD823TS)		/* The SPD8xx  use SLOT_B	*/
-# define CONFIG_PCMCIA_SLOT_B
-#elif defined(CONFIG_IVMS8) || defined(CONFIG_IVML24)	/* The IVM* use SLOT_A	*/
-# define CONFIG_PCMCIA_SLOT_A
-#elif defined(CONFIG_LWMON)		/* The LWMON  use SLOT_B	*/
-# define CONFIG_PCMCIA_SLOT_B
-#elif defined(CONFIG_ICU862)		/* The ICU862 use SLOT_B	*/
-# define CONFIG_PCMCIA_SLOT_B
-#elif defined(CONFIG_C2MON)		/* The C2MON  use SLOT_B	*/
-# define CONFIG_PCMCIA_SLOT_B
-#elif defined(CONFIG_R360MPI)		/* The R360MPI use SLOT_B	*/
-# define CONFIG_PCMCIA_SLOT_B
-#elif defined(CONFIG_ATC)		/* The ATC use SLOT_A	*/
-# define CONFIG_PCMCIA_SLOT_A
-#elif defined(CONFIG_NETTA)
-# define CONFIG_PCMCIA_SLOT_A
-#elif defined(CONFIG_UC100)		/* The UC100 use SLOT_B	        */
-# define CONFIG_PCMCIA_SLOT_B
 #else
 # error "PCMCIA Slot not configured"
 #endif
@@ -138,8 +93,8 @@ typedef struct {
  *	Common Memory Space
  */
 
-#define CFG_PCMCIA_PBR0		0xFE100000
-#define CFG_PCMCIA_POR0	    (	PCMCIA_BSIZE_2	\
+#define CONFIG_SYS_PCMCIA_PBR0		0xFE100000
+#define CONFIG_SYS_PCMCIA_POR0	    (	PCMCIA_BSIZE_2	\
 			    |	PCMCIA_PPS_16	\
 			    |	PCMCIA_PRS_MEM	\
 			    |	PCMCIA_SLOT_x	\
@@ -153,8 +108,8 @@ typedef struct {
  *	Common Memory Space
  */
 
-#define CFG_PCMCIA_PBR1		0xFE100080
-#define CFG_PCMCIA_POR1	    (	PCMCIA_BSIZE_8	\
+#define CONFIG_SYS_PCMCIA_PBR1		0xFE100080
+#define CONFIG_SYS_PCMCIA_POR1	    (	PCMCIA_BSIZE_8	\
 			    |	PCMCIA_PPS_8	\
 			    |	PCMCIA_PRS_MEM	\
 			    |	PCMCIA_SLOT_x	\
@@ -168,8 +123,8 @@ typedef struct {
  *	Common Memory Space
  */
 
-#define CFG_PCMCIA_PBR2		0xFE100100
-#define CFG_PCMCIA_POR2	    (	PCMCIA_BSIZE_8	\
+#define CONFIG_SYS_PCMCIA_PBR2		0xFE100100
+#define CONFIG_SYS_PCMCIA_POR2	    (	PCMCIA_BSIZE_8	\
 			    |	PCMCIA_PPS_8	\
 			    |	PCMCIA_PRS_MEM	\
 			    |	PCMCIA_SLOT_x	\
@@ -179,8 +134,8 @@ typedef struct {
 /* Window 3:
  *	not used
  */
-#define CFG_PCMCIA_PBR3		0
-#define CFG_PCMCIA_POR3		0
+#define CONFIG_SYS_PCMCIA_PBR3		0
+#define CONFIG_SYS_PCMCIA_POR3		0
 
 /* Window 4:
  *	Base: 0xFE100C00	CS1
@@ -189,8 +144,8 @@ typedef struct {
  *	Common Memory Space
  */
 
-#define CFG_PCMCIA_PBR4		0xFE100C00
-#define CFG_PCMCIA_POR4	    (	PCMCIA_BSIZE_2	\
+#define CONFIG_SYS_PCMCIA_PBR4		0xFE100C00
+#define CONFIG_SYS_PCMCIA_POR4	    (	PCMCIA_BSIZE_2	\
 			    |	PCMCIA_PPS_16	\
 			    |	PCMCIA_PRS_MEM	\
 			    |	PCMCIA_SLOT_x	\
@@ -204,8 +159,8 @@ typedef struct {
  *	Common Memory Space
  */
 
-#define CFG_PCMCIA_PBR5		0xFE100C80
-#define CFG_PCMCIA_POR5	    (	PCMCIA_BSIZE_8	\
+#define CONFIG_SYS_PCMCIA_PBR5		0xFE100C80
+#define CONFIG_SYS_PCMCIA_POR5	    (	PCMCIA_BSIZE_8	\
 			    |	PCMCIA_PPS_8	\
 			    |	PCMCIA_PRS_MEM	\
 			    |	PCMCIA_SLOT_x	\
@@ -219,8 +174,8 @@ typedef struct {
  *	Common Memory Space
  */
 
-#define CFG_PCMCIA_PBR6		0xFE100D00
-#define CFG_PCMCIA_POR6	    (	PCMCIA_BSIZE_8	\
+#define CONFIG_SYS_PCMCIA_PBR6		0xFE100D00
+#define CONFIG_SYS_PCMCIA_POR6	    (	PCMCIA_BSIZE_8	\
 			    |	PCMCIA_PPS_8	\
 			    |	PCMCIA_PRS_MEM	\
 			    |	PCMCIA_SLOT_x	\
@@ -230,8 +185,8 @@ typedef struct {
 /* Window 7:
  *	not used
  */
-#define CFG_PCMCIA_PBR7		0
-#define CFG_PCMCIA_POR7		0
+#define CONFIG_SYS_PCMCIA_PBR7		0
+#define CONFIG_SYS_PCMCIA_POR7		0
 
 /**********************************************************************/
 
@@ -306,15 +261,14 @@ typedef struct {
 #define CISTPL_IDE_HAS_INDEX	0x20
 #define CISTPL_IDE_IOIS16	0x40
 
-#endif	/* CFG_CMD_PCMCIA || CFG_CMD_IDE && (CONFIG_IDE_8xx_PCCARD || CONFIG_IDE_8xx_DIRECT) */
+#endif
 
 #ifdef	CONFIG_8xx
 extern u_int *pcmcia_pgcrx[];
 #define	PCMCIA_PGCRX(slot)	(*pcmcia_pgcrx[slot])
 #endif
 
-#if	(CONFIG_COMMANDS & CFG_CMD_IDE) && defined(CONFIG_IDE_8xx_PCCARD) \
-	|| defined(CONFIG_PXA_PCMCIA)
+#if defined(CONFIG_CMD_IDE) && defined(CONFIG_IDE_8xx_PCCARD)
 extern int check_ide_device(int slot);
 #endif
 

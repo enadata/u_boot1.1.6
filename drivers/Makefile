@@ -1,71 +1,81 @@
 #
-# (C) Copyright 2000-2006
-# Wolfgang Denk, DENX Software Engineering, wd@denx.de.
-#
-# See file CREDITS for list of people who contributed to this
-# project.
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License as
-# published by the Free Software Foundation; either version 2 of
-# the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-# MA 02111-1307 USA
+# SPDX-License-Identifier:	GPL-2.0+
 #
 
-include $(TOPDIR)/config.mk
+obj-$(CONFIG_$(SPL_)DM)		+= core/
+obj-$(CONFIG_$(SPL_)CLK)	+= clk/
+obj-$(CONFIG_$(SPL_)LED)	+= led/
+obj-$(CONFIG_$(SPL_)PINCTRL)	+= pinctrl/
+obj-$(CONFIG_$(SPL_)RAM)	+= ram/
 
-# CFLAGS += -DET_DEBUG -DDEBUG
+ifdef CONFIG_SPL_BUILD
 
-LIB	= $(obj)libdrivers.a
+obj-$(CONFIG_SPL_CRYPTO_SUPPORT) += crypto/
+obj-$(CONFIG_SPL_I2C_SUPPORT) += i2c/
+obj-$(CONFIG_SPL_GPIO_SUPPORT) += gpio/
+obj-$(CONFIG_SPL_MMC_SUPPORT) += mmc/
+obj-$(CONFIG_SPL_MPC8XXX_INIT_DDR_SUPPORT) += ddr/fsl/
+obj-$(CONFIG_ARMADA_38X) += ddr/marvell/a38x/
+obj-$(CONFIG_ARMADA_XP) += ddr/marvell/axp/
+obj-$(CONFIG_ALTERA_SDRAM) += ddr/altera/
+obj-$(CONFIG_SPL_SERIAL_SUPPORT) += serial/
+obj-$(CONFIG_SPL_SPI_SUPPORT) += spi/
+obj-$(CONFIG_SPL_POWER_SUPPORT) += power/ power/pmic/
+obj-$(CONFIG_SPL_POWER_SUPPORT) += power/regulator/
+obj-$(CONFIG_SPL_DRIVERS_MISC_SUPPORT) += misc/ sysreset/
+obj-$(CONFIG_SPL_MTD_SUPPORT) += mtd/
+obj-$(CONFIG_SPL_NAND_SUPPORT) += mtd/nand/
+obj-$(CONFIG_SPL_ONENAND_SUPPORT) += mtd/onenand/
+obj-$(CONFIG_SPL_SPI_FLASH_SUPPORT) += mtd/spi/
+obj-$(CONFIG_SPL_UBI) += mtd/ubispl/
+obj-$(CONFIG_SPL_DMA_SUPPORT) += dma/
+obj-$(CONFIG_SPL_ETH_SUPPORT) += net/
+obj-$(CONFIG_SPL_ETH_SUPPORT) += net/phy/
+obj-$(CONFIG_SPL_USBETH_SUPPORT) += net/phy/
+obj-$(CONFIG_SPL_MUSB_NEW_SUPPORT) += usb/musb-new/
+obj-$(CONFIG_SPL_USBETH_SUPPORT) += usb/gadget/
+obj-$(CONFIG_SPL_WATCHDOG_SUPPORT) += watchdog/
+obj-$(CONFIG_SPL_USB_HOST_SUPPORT) += usb/host/
+obj-$(CONFIG_OMAP_USB_PHY) += usb/phy/
+obj-$(CONFIG_SPL_SATA_SUPPORT) += block/
+obj-$(CONFIG_SPL_USB_HOST_SUPPORT) += block/
+obj-$(CONFIG_SPL_MMC_SUPPORT) += block/
 
-COBJS	= 3c589.o 5701rls.o ali512x.o atmel_usart.o \
-	  bcm570x.o bcm570x_autoneg.o cfb_console.o cfi_flash.o \
-	  cs8900.o ct69000.o dataflash.o dc2114x.o dm9000x.o \
-	  e1000.o eepro100.o \
-	  i8042.o inca-ip_sw.o keyboard.o \
-	  lan91c96.o \
-	  natsemi.o ne2000.o netarm_eth.o netconsole.o \
-	  ns16550.o ns8382x.o ns87308.o ns7520_eth.o omap1510_i2c.o \
-	  omap24xx_i2c.o pci.o pci_auto.o pci_indirect.o \
-	  pcnet.o plb2800_eth.o \
-	  ps2ser.o ps2mult.o pc_keyb.o \
-	  rtl8019.o rtl8139.o rtl8169.o \
-	  s3c4510b_eth.o s3c4510b_uart.o \
-	  sed13806.o sed156x.o \
-	  serial.o serial_max3100.o \
-	  serial_pl010.o serial_pl011.o serial_xuartlite.o \
-	  sl811_usb.o sm501.o smc91111.o smiLynxEM.o \
-	  status_led.o sym53c8xx.o ahci.o \
-	  ti_pci1410a.o tigon3.o tsec.o \
-	  usbdcore.o usbdcore_ep0.o usbdcore_omap1510.o usbtty.o \
-	  videomodes.o w83c553f.o \
-	  ks8695eth.o \
-	  pxa_pcmcia.o mpc8xx_pcmcia.o tqm8xx_pcmcia.o	\
-	  rpx_pcmcia.o \
-	  fsl_i2c.o
+else
 
-SRCS	:= $(COBJS:.o=.c)
-OBJS	:= $(addprefix $(obj),$(COBJS))
+obj-y += adc/
+obj-$(CONFIG_DM_DEMO) += demo/
+obj-$(CONFIG_BIOSEMU) += bios_emulator/
+obj-y += block/
+obj-$(CONFIG_BOOTCOUNT_LIMIT) += bootcount/
+obj-$(CONFIG_CPU) += cpu/
+obj-y += crypto/
+obj-$(CONFIG_FPGA) += fpga/
+obj-y += hwmon/
+obj-y += misc/
+obj-y += pcmcia/
+obj-y += dfu/
+obj-$(CONFIG_X86) += pch/
+obj-y += rtc/
+obj-y += sound/
+obj-y += spmi/
+obj-y += sysreset/
+obj-y += timer/
+obj-y += tpm/
+obj-y += twserial/
+obj-y += video/
+obj-y += watchdog/
+obj-$(CONFIG_QE) += qe/
+obj-$(CONFIG_U_QE) += qe/
+obj-y += mailbox/
+obj-y += memory/
+obj-y += pwm/
+obj-y += reset/
+obj-y += input/
+# SOC specific infrastructure drivers.
+obj-y += soc/
+obj-$(CONFIG_REMOTEPROC) += remoteproc/
+obj-y += thermal/
 
-all:	$(LIB)
-
-$(LIB): $(obj).depend $(OBJS)
-	$(AR) $(ARFLAGS) $@ $(OBJS)
-
-#########################################################################
-
-# defines $(obj).depend target
-include $(SRCTREE)/rules.mk
-
-sinclude $(obj).depend
-
-#########################################################################
+obj-$(CONFIG_MACH_PIC32) += ddr/microchip/
+endif

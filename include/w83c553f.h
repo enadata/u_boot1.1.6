@@ -2,23 +2,7 @@
  * (C) Copyright 2000
  * Rob Taylor, Flying Pig Systems. robt@flyingpig.com.
  *
- * See file CREDITS for list of people who contributed to this
- * project.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
  /* winbond access routines and defines*/
@@ -73,30 +57,30 @@
 /*
  * Interrupt controller
  */
-#define W83C553F_PIC1_ICW1	CFG_ISA_IO + 0x20
-#define W83C553F_PIC1_ICW2	CFG_ISA_IO + 0x21
-#define W83C553F_PIC1_ICW3	CFG_ISA_IO + 0x21
-#define W83C553F_PIC1_ICW4	CFG_ISA_IO + 0x21
-#define W83C553F_PIC1_OCW1	CFG_ISA_IO + 0x21
-#define W83C553F_PIC1_OCW2	CFG_ISA_IO + 0x20
-#define W83C553F_PIC1_OCW3	CFG_ISA_IO + 0x20
-#define W83C553F_PIC1_ELC	CFG_ISA_IO + 0x4D0
-#define W83C553F_PIC2_ICW1	CFG_ISA_IO + 0xA0
-#define W83C553F_PIC2_ICW2	CFG_ISA_IO + 0xA1
-#define W83C553F_PIC2_ICW3	CFG_ISA_IO + 0xA1
-#define W83C553F_PIC2_ICW4	CFG_ISA_IO + 0xA1
-#define W83C553F_PIC2_OCW1	CFG_ISA_IO + 0xA1
-#define W83C553F_PIC2_OCW2	CFG_ISA_IO + 0xA0
-#define W83C553F_PIC2_OCW3	CFG_ISA_IO + 0xA0
-#define W83C553F_PIC2_ELC	CFG_ISA_IO + 0x4D1
+#define W83C553F_PIC1_ICW1	CONFIG_SYS_ISA_IO + 0x20
+#define W83C553F_PIC1_ICW2	CONFIG_SYS_ISA_IO + 0x21
+#define W83C553F_PIC1_ICW3	CONFIG_SYS_ISA_IO + 0x21
+#define W83C553F_PIC1_ICW4	CONFIG_SYS_ISA_IO + 0x21
+#define W83C553F_PIC1_OCW1	CONFIG_SYS_ISA_IO + 0x21
+#define W83C553F_PIC1_OCW2	CONFIG_SYS_ISA_IO + 0x20
+#define W83C553F_PIC1_OCW3	CONFIG_SYS_ISA_IO + 0x20
+#define W83C553F_PIC1_ELC	CONFIG_SYS_ISA_IO + 0x4D0
+#define W83C553F_PIC2_ICW1	CONFIG_SYS_ISA_IO + 0xA0
+#define W83C553F_PIC2_ICW2	CONFIG_SYS_ISA_IO + 0xA1
+#define W83C553F_PIC2_ICW3	CONFIG_SYS_ISA_IO + 0xA1
+#define W83C553F_PIC2_ICW4	CONFIG_SYS_ISA_IO + 0xA1
+#define W83C553F_PIC2_OCW1	CONFIG_SYS_ISA_IO + 0xA1
+#define W83C553F_PIC2_OCW2	CONFIG_SYS_ISA_IO + 0xA0
+#define W83C553F_PIC2_OCW3	CONFIG_SYS_ISA_IO + 0xA0
+#define W83C553F_PIC2_ELC	CONFIG_SYS_ISA_IO + 0x4D1
 
-#define W83C553F_TMR1_CMOD	CFG_ISA_IO + 0x43
+#define W83C553F_TMR1_CMOD	CONFIG_SYS_ISA_IO + 0x43
 
 /*
  * DMA controller
  */
-#define W83C553F_DMA1	CFG_ISA_IO + 0x000	/* channel 0 - 3 */
-#define W83C553F_DMA2	CFG_ISA_IO + 0x0C0	/* channel 4 - 7 */
+#define W83C553F_DMA1	CONFIG_SYS_ISA_IO + 0x000	/* channel 0 - 3 */
+#define W83C553F_DMA2	CONFIG_SYS_ISA_IO + 0x0C0	/* channel 4 - 7 */
 
 /* command/status register bit definitions */
 

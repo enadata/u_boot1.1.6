@@ -2,80 +2,167 @@
 # (C) Copyright 2004-2006
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
 #
-# See file CREDITS for list of people who contributed to this
-# project.
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License as
-# published by the Free Software Foundation; either version 2 of
-# the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-# MA 02111-1307 USA
+# SPDX-License-Identifier:	GPL-2.0+
 #
 
-include $(TOPDIR)/config.mk
+# core
+ifndef CONFIG_SPL_BUILD
+obj-y += init/
+obj-y += main.o
+obj-y += exports.o
+obj-y += hash.o
+obj-$(CONFIG_HUSH_PARSER) += cli_hush.o
+obj-$(CONFIG_AUTOBOOT) += autoboot.o
 
-LIB	= $(obj)libcommon.a
+# This option is not just y/n - it can have a numeric value
+ifdef CONFIG_BOOT_RETRY_TIME
+obj-y += bootretry.o
+endif
 
-AOBJS	=
+# boards
+obj-y += board_f.o
+obj-y += board_r.o
+obj-$(CONFIG_DISPLAY_BOARDINFO) += board_info.o
+obj-$(CONFIG_DISPLAY_BOARDINFO_LATE) += board_info.o
 
-COBJS	= main.o ACEX1K.o altera.o bedbug.o circbuf.o \
-	  cmd_ace.o cmd_autoscript.o \
-	  cmd_bdinfo.o cmd_bedbug.o cmd_bmp.o cmd_boot.o cmd_bootm.o \
-	  cmd_cache.o cmd_console.o \
-	  cmd_date.o cmd_dcr.o cmd_diag.o cmd_display.o cmd_doc.o cmd_dtt.o \
-	  cmd_eeprom.o cmd_elf.o cmd_ext2.o \
-	  cmd_fat.o cmd_fdc.o cmd_fdos.o cmd_flash.o cmd_fpga.o \
-	  cmd_i2c.o cmd_ide.o cmd_immap.o cmd_itest.o cmd_jffs2.o \
-	  cmd_load.o cmd_log.o \
-	  cmd_mem.o cmd_mii.o cmd_misc.o cmd_mmc.o \
-	  cmd_nand.o cmd_net.o cmd_nvedit.o \
-	  cmd_pci.o cmd_pcmcia.o cmd_portio.o \
-	  cmd_reginfo.o cmd_reiser.o cmd_scsi.o cmd_spi.o cmd_universe.o \
-	  cmd_usb.o cmd_vfd.o \
-	  command.o console.o devices.o dlmalloc.o docecc.o \
-	  environment.o env_common.o \
-	  env_nand.o env_dataflash.o env_flash.o env_eeprom.o \
-	  env_nvram.o env_nowhere.o \
-	  exports.o \
-	  flash.o fpga.o ft_build.o \
-	  hush.o kgdb.o lcd.o lists.o lynxkdi.o \
-	  memsize.o miiphybb.o miiphyutil.o \
-	  s_record.o serial.o soft_i2c.o soft_spi.o spartan2.o spartan3.o \
-	  usb.o usb_kbd.o usb_storage.o \
-	  virtex2.o xilinx.o crc16.o xyzModem.o cmd_mac.o
+obj-$(CONFIG_CMD_BOOTM) += bootm.o bootm_os.o
+obj-$(CONFIG_CMD_BOOTZ) += bootm.o bootm_os.o
+obj-$(CONFIG_CMD_BOOTI) += bootm.o bootm_os.o
 
-SRCS	:= $(AOBJS:.o=.S) $(COBJS:.o=.c)
-OBJS	:= $(addprefix $(obj),$(AOBJS) $(COBJS))
+# environment
+obj-y += env_attr.o
+obj-y += env_callback.o
+obj-y += env_flags.o
+obj-$(CONFIG_ENV_IS_IN_DATAFLASH) += env_dataflash.o
+obj-$(CONFIG_ENV_IS_IN_EEPROM) += env_eeprom.o
+extra-$(CONFIG_ENV_IS_EMBEDDED) += env_embedded.o
+obj-$(CONFIG_ENV_IS_IN_EEPROM) += env_embedded.o
+extra-$(CONFIG_ENV_IS_IN_FLASH) += env_embedded.o
+obj-$(CONFIG_ENV_IS_IN_NVRAM) += env_embedded.o
+obj-$(CONFIG_ENV_IS_IN_FLASH) += env_flash.o
+obj-$(CONFIG_ENV_IS_IN_MMC) += env_mmc.o
+obj-$(CONFIG_ENV_IS_IN_FAT) += env_fat.o
+obj-$(CONFIG_ENV_IS_IN_EXT4) += env_ext4.o
+obj-$(CONFIG_ENV_IS_IN_NAND) += env_nand.o
+obj-$(CONFIG_ENV_IS_IN_NVRAM) += env_nvram.o
+obj-$(CONFIG_ENV_IS_IN_ONENAND) += env_onenand.o
+obj-$(CONFIG_ENV_IS_IN_SATA) += env_sata.o
+obj-$(CONFIG_ENV_IS_IN_SPI_FLASH) += env_sf.o
+obj-$(CONFIG_ENV_IS_IN_REMOTE) += env_remote.o
+obj-$(CONFIG_ENV_IS_IN_UBI) += env_ubi.o
+obj-$(CONFIG_ENV_IS_NOWHERE) += env_nowhere.o
 
-CPPFLAGS += -I..
+obj-$(CONFIG_CMD_BEDBUG) += bedbug.o
+obj-$(CONFIG_$(SPL_)OF_LIBFDT) += fdt_support.o
 
-all:	$(LIB) $(AOBJS)
+obj-$(CONFIG_MII) += miiphyutil.o
+obj-$(CONFIG_CMD_MII) += miiphyutil.o
+obj-$(CONFIG_PHYLIB) += miiphyutil.o
 
-$(LIB): $(obj).depend $(OBJS)
-	$(AR) $(ARFLAGS) $@ $(OBJS)
+ifdef CONFIG_CMD_USB
+obj-y += usb.o usb_hub.o
+obj-$(CONFIG_USB_STORAGE) += usb_storage.o
+endif
 
-$(obj)environment.o: $(src)environment.c $(obj)../tools/envcrc
-	$(CC) $(AFLAGS) -Wa,--no-warn \
-		-DENV_CRC=$(shell $(obj)../tools/envcrc) \
-		-c -o $@ $(src)environment.c
+# others
+obj-$(CONFIG_BOOTSTAGE) += bootstage.o
+obj-$(CONFIG_CONSOLE_MUX) += iomux.o
+obj-y += flash.o
+obj-$(CONFIG_CMD_KGDB) += kgdb.o kgdb_stubs.o
+obj-$(CONFIG_I2C_EDID) += edid.o
+obj-$(CONFIG_KALLSYMS) += kallsyms.o
+obj-y += splash.o
+obj-$(CONFIG_SPLASH_SOURCE) += splash_source.o
+ifndef CONFIG_DM_VIDEO
+obj-$(CONFIG_LCD) += lcd.o lcd_console.o
+endif
+obj-$(CONFIG_LCD_ROTATION) += lcd_console_rotation.o
+obj-$(CONFIG_LCD_DT_SIMPLEFB) += lcd_simplefb.o
+obj-$(CONFIG_LYNXKDI) += lynxkdi.o
+obj-$(CONFIG_MENU) += menu.o
+obj-$(CONFIG_CMD_SATA) += sata.o
+obj-$(CONFIG_SCSI) += scsi.o
+obj-$(CONFIG_UPDATE_TFTP) += update.o
+obj-$(CONFIG_DFU_TFTP) += update.o
+obj-$(CONFIG_USB_KEYBOARD) += usb_kbd.o
 
-$(obj)../tools/envcrc:
-	$(MAKE) -C ../tools
+endif # !CONFIG_SPL_BUILD
 
-#########################################################################
+ifdef CONFIG_SPL_BUILD
+obj-$(CONFIG_SPL_HASH_SUPPORT) += hash.o
+obj-$(CONFIG_ENV_IS_IN_FLASH) += env_flash.o
+obj-$(CONFIG_SPL_YMODEM_SUPPORT) += xyzModem.o
+obj-$(CONFIG_SPL_NET_SUPPORT) += miiphyutil.o
+obj-$(CONFIG_SPL_OF_TRANSLATE) += fdt_support.o
+ifdef CONFIG_SPL_USB_HOST_SUPPORT
+obj-$(CONFIG_SPL_USB_SUPPORT) += usb.o usb_hub.o
+obj-$(CONFIG_USB_STORAGE) += usb_storage.o
+endif
+# environment
+ifdef CONFIG_SPL_ENV_SUPPORT
+obj-$(CONFIG_SPL_ENV_SUPPORT) += env_attr.o
+obj-$(CONFIG_SPL_ENV_SUPPORT) += env_flags.o
+obj-$(CONFIG_SPL_ENV_SUPPORT) += env_callback.o
+obj-$(CONFIG_ENV_IS_NOWHERE) += env_nowhere.o
+obj-$(CONFIG_ENV_IS_IN_MMC) += env_mmc.o
+obj-$(CONFIG_ENV_IS_IN_FAT) += env_fat.o
+obj-$(CONFIG_ENV_IS_IN_EXT4) += env_ext4.o
+obj-$(CONFIG_ENV_IS_IN_NAND) += env_nand.o
+obj-$(CONFIG_ENV_IS_IN_SPI_FLASH) += env_sf.o
+obj-$(CONFIG_ENV_IS_IN_FLASH) += env_flash.o
+endif
+ifdef CONFIG_SPL_SATA_SUPPORT
+obj-$(CONFIG_SCSI) += scsi.o
+endif
+endif
+#environment
+obj-y += env_common.o
+#others
+obj-$(CONFIG_DDR_SPD) += ddr_spd.o
+obj-$(CONFIG_SPD_EEPROM) += ddr_spd.o
+obj-$(CONFIG_HWCONFIG) += hwconfig.o
+obj-$(CONFIG_BOUNCE_BUFFER) += bouncebuf.o
+ifdef CONFIG_SPL_BUILD
+obj-$(CONFIG_SPL_SERIAL_SUPPORT) += console.o
+else
+obj-y += console.o
+endif
+obj-$(CONFIG_CROS_EC) += cros_ec.o
+obj-y += dlmalloc.o
+ifdef CONFIG_SYS_MALLOC_F_LEN
+obj-y += malloc_simple.o
+endif
+obj-$(CONFIG_CMD_IDE) += ide.o
+obj-y += image.o
+obj-$(CONFIG_ANDROID_BOOT_IMAGE) += image-android.o
+obj-$(CONFIG_$(SPL_)OF_LIBFDT) += image-fdt.o
+obj-$(CONFIG_$(SPL_)FIT) += image-fit.o
+obj-$(CONFIG_$(SPL_)FIT_SIGNATURE) += image-sig.o
+obj-$(CONFIG_IO_TRACE) += iotrace.o
+obj-y += memsize.o
+obj-y += stdio.o
 
-# defines $(obj).depend target
-include $(SRCTREE)/rules.mk
+# This option is not just y/n - it can have a numeric value
+ifdef CONFIG_FASTBOOT_FLASH
+obj-y += image-sparse.o
+ifdef CONFIG_FASTBOOT_FLASH_MMC_DEV
+obj-y += fb_mmc.o
+endif
+ifdef CONFIG_FASTBOOT_FLASH_NAND_DEV
+obj-y += fb_nand.o
+endif
+endif
 
-sinclude $(obj).depend
+ifdef CONFIG_CMD_EEPROM_LAYOUT
+obj-y += eeprom/eeprom_field.o eeprom/eeprom_layout.o
+endif
+# We always have this since drivers/ddr/fs/interactive.c needs it
+obj-$(CONFIG_CMDLINE) += cli_simple.o
 
-#########################################################################
+obj-y += cli.o
+obj-$(CONFIG_CMDLINE) += cli_readline.o
+obj-y += command.o
+obj-y += s_record.o
+obj-y += xyzModem.o
+
+CFLAGS_env_embedded.o := -Wa,--no-warn -DENV_CRC=$(shell tools/envcrc 2>/dev/null)

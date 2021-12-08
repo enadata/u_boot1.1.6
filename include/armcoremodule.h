@@ -6,42 +6,26 @@
  * No standalonw port yet available
  * - this file is included by both integratorap.h & integratorcp.h
  *
- * See file CREDITS for list of people who contributed to this
- * project.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __ARMCOREMODULE_H
 #define __ARMCOREMODULE_H
 
-#define CM_BASE		0x10000000
+#define CM_BASE			0x10000000
 
 /* CM registers common to all CMs */
 /* Note that observed values after reboot into the ARM Boot Monitor
    have been used as defaults, rather than the POR values */
-#define OS_CTRL     		0x0000000C
+#define OS_CTRL			0x0000000C
 #define CMMASK_REMAP		0x00000005	/* set remap & led           */
 #define CMMASK_RESET		0x00000008
-#define OS_LOCK             	0x00000014
-#define CMVAL_LOCK1	     	0x0000A000	/* locking value             */
+#define OS_LOCK			0x00000014
+#define CMVAL_LOCK1		0x0000A000	/* locking value             */
 #define CMVAL_LOCK2		0x0000005F	/* locking value             */
 #define CMVAL_UNLOCK		0x00000000	/* any value != CM_LOCKVAL   */
 #define OS_SDRAM		0x00000020
-#define OS_INIT     		0x00000024
+#define OS_INIT			0x00000024
 #define CMMASK_MAP_SIMPLE	0xFFFDFFFF	/* simple mapping */
 #define CMMASK_TCRAM_DISABLE	0xFFFEFFFF	/* TCRAM disabled */
 #define CMMASK_LOWVEC		0x00000000	/* vectors @ 0x00000000 */

@@ -2,23 +2,7 @@
  * (C) Copyright 2000-2004
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  *
- * See file CREDITS for list of people who contributed to this
- * project.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -35,7 +19,7 @@
  * Exception offsets (PowerPC standard)
  */
 #define EXC_OFF_SYS_RESET	0x0100	/* System reset				*/
-
+#define _START_OFFSET		EXC_OFF_SYS_RESET
 
 /*-----------------------------------------------------------------------
  * SYPCR - System Protection Control Register				11-9
@@ -208,12 +192,12 @@
 #define SCCR_DFBRG10	0x00001000	/* BRGCLK division by 16		*/
 #define SCCR_DFBRG11	0x00001800	/* BRGCLK division by 64		*/
 #define SCCR_DFNL000	0x00000000	/* Division by 2 (default = minimum)	*/
-#define SCCR_DFNL001	0x00000100	/* Division by 4 	                */
-#define SCCR_DFNL010	0x00000200	/* Division by 8 	                */
-#define SCCR_DFNL011	0x00000300	/* Division by 16 	                */
-#define SCCR_DFNL100	0x00000400	/* Division by 32 	                */
-#define SCCR_DFNL101	0x00000500	/* Division by 64 	                */
-#define SCCR_DFNL110	0x00000600	/* Division by 128 	                */
+#define SCCR_DFNL001	0x00000100	/* Division by 4	                */
+#define SCCR_DFNL010	0x00000200	/* Division by 8	                */
+#define SCCR_DFNL011	0x00000300	/* Division by 16	                */
+#define SCCR_DFNL100	0x00000400	/* Division by 32	                */
+#define SCCR_DFNL101	0x00000500	/* Division by 64	                */
+#define SCCR_DFNL110	0x00000600	/* Division by 128	                */
 #define SCCR_DFNL111	0x00000700	/* Division by 256 (maximum)		*/
 #define SCCR_DFNH000	0x00000000	/* Division by 1 (default = minimum)	*/
 #define SCCR_DFNH110	0x000000D0	/* Division by 64 (maximum)		*/

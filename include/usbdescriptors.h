@@ -13,20 +13,7 @@
  *	Tom Rushworth <tbr@lineo.com>,
  *	Bruce Balden <balden@lineo.com>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /* USB Descriptors - Create a complete description of all of the
@@ -92,33 +79,42 @@
 #define COMMUNICATIONS_DEVICE_CLASS	0x02
 
 /* c.f. CDC 4.2 Table 15 */
-#define COMMUNICATIONS_INTERFACE_CLASS	0x02
+#define COMMUNICATIONS_INTERFACE_CLASS_CONTROL	0x02
+#define COMMUNICATIONS_INTERFACE_CLASS_DATA		0x0A
+#define COMMUNICATIONS_INTERFACE_CLASS_VENDOR	0x0FF
 
 /* c.f. CDC 4.3 Table 16 */
-#define COMMUNICATIONS_NO_SUBCLASS	0x00
+#define COMMUNICATIONS_NO_SUBCLASS		0x00
 #define COMMUNICATIONS_DLCM_SUBCLASS	0x01
-#define COMMUNICATIONS_ACM_SUBCLASS	0x02
-#define COMMUNICATIONS_TCM_SUBCLASS	0x03
+#define COMMUNICATIONS_ACM_SUBCLASS		0x02
+#define COMMUNICATIONS_TCM_SUBCLASS		0x03
 #define COMMUNICATIONS_MCCM_SUBCLASS	0x04
-#define COMMUNICATIONS_CCM_SUBCLASS	0x05
+#define COMMUNICATIONS_CCM_SUBCLASS		0x05
 #define COMMUNICATIONS_ENCM_SUBCLASS	0x06
 #define COMMUNICATIONS_ANCM_SUBCLASS	0x07
 
 /* c.f. WMCD 5.1 */
 #define COMMUNICATIONS_WHCM_SUBCLASS	0x08
-#define COMMUNICATIONS_DMM_SUBCLASS	0x09
+#define COMMUNICATIONS_DMM_SUBCLASS		0x09
 #define COMMUNICATIONS_MDLM_SUBCLASS	0x0a
 #define COMMUNICATIONS_OBEX_SUBCLASS	0x0b
 
-/* c.f. CDC 4.6 Table 18 */
+/* c.f. CDC 4.4 Table 17 */
+#define COMMUNICATIONS_NO_PROTOCOL		0x00
+#define COMMUNICATIONS_V25TER_PROTOCOL	0x01	/*Common AT Hayes compatible*/
+
+/* c.f. CDC 4.5 Table 18 */
 #define DATA_INTERFACE_CLASS		0x0a
 
+/* c.f. CDC 4.6 No Table */
+#define DATA_INTERFACE_SUBCLASS_NONE	0x00	/* No subclass pertinent */
+
 /* c.f. CDC 4.7 Table 19 */
-#define COMMUNICATIONS_NO_PROTOCOL	0x00
+#define DATA_INTERFACE_PROTOCOL_NONE	0x00	/* No class protcol required */
 
 
 /* c.f. CDC 5.2.3 Table 24 */
-#define CS_INTERFACE			0x24
+#define CS_INTERFACE		0x24
 #define CS_ENDPOINT			0x25
 
 /*
@@ -128,7 +124,7 @@
  * c.f. WMCD 5.3 Table 5.3
  */
 
-#define USB_ST_HEADER			0x00
+#define USB_ST_HEADER		0x00
 #define USB_ST_CMF			0x01
 #define USB_ST_ACMF			0x02
 #define USB_ST_DLMF			0x03
@@ -137,18 +133,18 @@
 #define USB_ST_UF			0x06
 #define USB_ST_CSF			0x07
 #define USB_ST_TOMF			0x08
-#define USB_ST_USBTF			0x09
+#define USB_ST_USBTF		0x09
 #define USB_ST_NCT			0x0a
 #define USB_ST_PUF			0x0b
 #define USB_ST_EUF			0x0c
 #define USB_ST_MCMF			0x0d
 #define USB_ST_CCMF			0x0e
 #define USB_ST_ENF			0x0f
-#define USB_ST_ATMNF			0x10
+#define USB_ST_ATMNF		0x10
 
 #define USB_ST_WHCM			0x11
 #define USB_ST_MDLM			0x12
-#define USB_ST_MDLMD			0x13
+#define USB_ST_MDLMD		0x13
 #define USB_ST_DMM			0x14
 #define USB_ST_OBEX			0x15
 #define USB_ST_CS			0x16
@@ -232,6 +228,21 @@ struct usb_device_descriptor {
 	u8 bNumConfigurations;
 } __attribute__ ((packed));
 
+#if defined(CONFIG_USBD_HS)
+struct usb_qualifier_descriptor {
+	u8 bLength;
+	u8 bDescriptorType;
+
+	u16 bcdUSB;
+	u8 bDeviceClass;
+	u8 bDeviceSubClass;
+	u8 bDeviceProtocol;
+	u8 bMaxPacketSize0;
+	u8 bNumConfigurations;
+	u8 breserved;
+} __attribute__ ((packed));
+#endif
+
 struct usb_string_descriptor {
 	u8 bLength;
 	u8 bDescriptorType;	/* 0x03 */
@@ -312,7 +323,8 @@ struct usb_class_union_function_descriptor {
 	u8 bDescriptorType;
 	u8 bDescriptorSubtype;	/* 0x06 */
 	u8 bMasterInterface;
-	u8 bSlaveInterface0[0];
+	/* u8 bSlaveInterface0[0]; */
+	u8 bSlaveInterface0;
 } __attribute__ ((packed));
 
 struct usb_class_country_selection_descriptor {
@@ -494,4 +506,30 @@ struct usb_class_descriptor {
 
 } __attribute__ ((packed));
 
+#ifdef DEBUG
+static inline void print_device_descriptor(struct usb_device_descriptor *d)
+{
+	serial_printf("usb device descriptor \n");
+	serial_printf("\tbLength %2.2x\n", d->bLength);
+	serial_printf("\tbDescriptorType %2.2x\n", d->bDescriptorType);
+	serial_printf("\tbcdUSB %4.4x\n", d->bcdUSB);
+	serial_printf("\tbDeviceClass %2.2x\n", d->bDeviceClass);
+	serial_printf("\tbDeviceSubClass %2.2x\n", d->bDeviceSubClass);
+	serial_printf("\tbDeviceProtocol %2.2x\n", d->bDeviceProtocol);
+	serial_printf("\tbMaxPacketSize0 %2.2x\n", d->bMaxPacketSize0);
+	serial_printf("\tidVendor %4.4x\n", d->idVendor);
+	serial_printf("\tidProduct %4.4x\n", d->idProduct);
+	serial_printf("\tbcdDevice %4.4x\n", d->bcdDevice);
+	serial_printf("\tiManufacturer %2.2x\n", d->iManufacturer);
+	serial_printf("\tiProduct %2.2x\n", d->iProduct);
+	serial_printf("\tiSerialNumber %2.2x\n", d->iSerialNumber);
+	serial_printf("\tbNumConfigurations %2.2x\n", d->bNumConfigurations);
+}
+
+#else
+
+/* stubs */
+#define print_device_descriptor(d)
+
+#endif /* DEBUG */
 #endif

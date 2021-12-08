@@ -23,30 +23,9 @@
 #include <common.h>
 #include <malloc.h>
 #include <watchdog.h>
-#include <zlib.h>
-
-#if (CONFIG_COMMANDS & CFG_CMD_JFFS2)
+#include <u-boot/zlib.h>
 
 static z_stream stream;
-
-#define ZALLOC_ALIGNMENT	16
-
-static void *zalloc (void *x, unsigned items, unsigned size)
-{
-	void *p;
-
-	size *= items;
-	size = (size + ZALLOC_ALIGNMENT - 1) & ~(ZALLOC_ALIGNMENT - 1);
-
-	p = malloc (size);
-
-	return (p);
-}
-
-static void zfree (void *x, void *addr, unsigned nb)
-{
-	free (addr);
-}
 
 /* Returns length of decompressed data. */
 int cramfs_uncompress_block (void *dst, void *src, int srclen)
@@ -77,8 +56,8 @@ int cramfs_uncompress_init (void)
 {
 	int err;
 
-	stream.zalloc = zalloc;
-	stream.zfree = zfree;
+	stream.zalloc = gzalloc;
+	stream.zfree = gzfree;
 	stream.next_in = 0;
 	stream.avail_in = 0;
 
@@ -102,5 +81,3 @@ int cramfs_uncompress_exit (void)
 	inflateEnd (&stream);
 	return 0;
 }
-
-#endif /* CFG_FS_CRAMFS */

@@ -2,28 +2,10 @@
  * (C) Copyright 2001
  * Denis Peter, MPL AG Switzerland
  *
- * See file CREDITS for list of people who contributed to this
- * project.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
- *
+ * SPDX-License-Identifier:	GPL-2.0+
  *
  * Most of these definitions are derived from
  * linux/drivers/scsi/sym53c8xx_defs.h
- *
  */
 
 #ifndef _SYM53C8XX_DEFS_H
@@ -33,7 +15,7 @@
 #define SCNTL0		0x00    /* full arb., ena parity, par->ATN  */
 
 #define SCNTL1		0x01    /* no reset                         */
-  #define   ISCON   0x10  /* connected to scsi		    				*/
+  #define   ISCON   0x10  /* connected to scsi						*/
   #define   CRST    0x08  /* force reset                      */
   #define   IARB    0x02  /* immediate arbitration            */
 
@@ -128,7 +110,7 @@
 
 #define CTEST3		0x1b
 	#define   FLF     0x08  /* cmd: flush dma fifo              */
-	#define   CLF	  	0x04	/* cmd: clear dma fifo		    */
+	#define   CLF		0x04	/* cmd: clear dma fifo		    */
 	#define   FM      0x02  /* mod: fetch pin mode              */
 	#define   WRIE    0x01  /* mod: write and invalidate enable */
 				/* bits 4-7 rsvd for C1010          */
@@ -219,7 +201,7 @@
 
 #define SIDL			0x50	/* Lowlevel: latched from scsi data */
 #define STEST4		0x52
-	#define SMODE  	0xc0	/* SCSI bus mode      (895/6 only) */
+	#define SMODE	0xc0	/* SCSI bus mode      (895/6 only) */
 	#define SMODE_HVD 0x40	/* High Voltage Differential       */
 	#define SMODE_SE  0x80	/* Single Ended                    */
 	#define SMODE_LVD 0xc0	/* Low Voltage Differential        */
@@ -435,7 +417,7 @@
 **	LOAD_REG (reg, data)	  reg  = <data>
 **	<< 0 >>
 **
-**	LOAD_SFBR(data) 	  SFBR = <data>
+**	LOAD_SFBR(data)		  SFBR = <data>
 **	<< 0 >>
 **
 **-----------------------------------------------------------
@@ -567,12 +549,5 @@
 /* Hardware errors  are defined in scsi.h */
 
 #define SCSI_IDENTIFY					0xC0
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 #endif

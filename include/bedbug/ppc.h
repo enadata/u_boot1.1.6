@@ -296,11 +296,6 @@ struct operand {
 			   ((rc) & 0x1))
 #define MDS_MASK MDS_OPCODE(0x3f,0xf,0x1)
 
-#ifndef FALSE
-#define FALSE 0
-#define TRUE (!FALSE)
-#endif
-
 #define INSTRUCTION( memaddr ) ntohl(*(unsigned long *)(memaddr))
 
 #define MAX_OPERANDS  8
@@ -321,7 +316,7 @@ struct opcode {
 				   array are the operand identifiers */
 
   int (*hfunc)(struct ppc_ctx *);
-  				/* Address of a function to handle the given
+				/* Address of a function to handle the given
 				   mnemonic */
 
   char *	name;		/* The symbolic name of this opcode */

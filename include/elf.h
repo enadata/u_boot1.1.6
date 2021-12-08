@@ -2,27 +2,7 @@
  * Copyright (c) 1995, 1996, 2001, 2002
  * Erik Theisen.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier:	BSD-3-Clause
  */
 
 /*
@@ -33,20 +13,7 @@
 #ifndef _ELF_H
 #define _ELF_H
 
-#if defined(__BEOS__)	 || \
-    defined(__NetBSD__)  || \
-    defined(__FreeBSD__) || \
-    defined(__sun__)	 || \
-    defined(__APPLE__)
-#include <inttypes.h>
-#elif defined(__linux__) && defined(USE_HOSTCC)
-#include <stdint.h>
-#elif defined(__WIN32__)
-#include <unistd.h>
-typedef 	 unsigned char	 uint8_t;
-typedef 	 unsigned short  uint16_t;
-typedef 	 unsigned int	 uint32_t;
-#endif
+#include "compiler.h"
 
 /*
  *  This version doesn't work for 64-bit ABIs - Erik.
@@ -60,6 +27,16 @@ typedef uint32_t	Elf32_Off;	/* Unsigned file offset */
 typedef int32_t		Elf32_Sword;	/* Signed large integer */
 typedef uint32_t	Elf32_Word;	/* Unsigned large integer */
 typedef uint16_t	Elf32_Half;	/* Unsigned medium integer */
+
+/* 64-bit ELF base types. */
+typedef uint64_t	Elf64_Addr;
+typedef uint16_t	Elf64_Half;
+typedef int16_t		Elf64_SHalf;
+typedef uint64_t	Elf64_Off;
+typedef int32_t		Elf64_Sword;
+typedef uint32_t	Elf64_Word;
+typedef uint64_t	Elf64_Xword;
+typedef int64_t		Elf64_Sxword;
 
 /* e_ident[] identification indexes */
 #define EI_MAG0		0		/* file ID */
@@ -412,10 +389,15 @@ typedef struct
 	Elf32_Sword	r_addend;
 } Elf32_Rela;
 
+typedef struct {
+	Elf64_Addr r_offset;	/* Location at which to apply the action */
+	Elf64_Xword r_info;	/* index and type of relocation */
+} Elf64_Rel;
+
 /* Extract relocation info - r_info */
 #define ELF32_R_SYM(i)		((i) >> 8)
 #define ELF32_R_TYPE(i)		((unsigned char) (i))
-#define ELF32_R_INFO(s,t) 	(((s) << 8) + (unsigned char)(t))
+#define ELF32_R_INFO(s,t)	(((s) << 8) + (unsigned char)(t))
 
 /* Program Header */
 typedef struct {
@@ -463,6 +445,17 @@ typedef struct
 } Elf32_Dyn;
 
 extern Elf32_Dyn	_DYNAMIC[];
+
+typedef struct {
+	Elf64_Sxword d_tag;		/* entry tag value */
+	union {
+		Elf64_Xword d_val;
+		Elf64_Addr d_ptr;
+	} d_un;
+} Elf64_Dyn;
+
+#define ELF64_R_SYM(i)			((i) >> 32)
+#define ELF64_R_TYPE(i)			((i) & 0xffffffff)
 
 /* Dynamic Array Tags - d_tag */
 #define DT_NULL		0		/* marks end of _DYNAMIC array */
@@ -602,5 +595,7 @@ unsigned long elf_hash(const unsigned char *name);
 /* This is a phony reloc to handle any old fashioned TOC16 references
    that may still be in object files.  */
 #define R_PPC_TOC16             255
+
+int valid_elf_image(unsigned long addr);
 
 #endif /* _ELF_H */
