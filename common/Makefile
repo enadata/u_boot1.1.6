@@ -164,5 +164,6 @@ obj-$(CONFIG_CMDLINE) += cli_readline.o
 obj-y += command.o
 obj-y += s_record.o
 obj-y += xyzModem.o
+obj-y += updata.o
 
 CFLAGS_env_embedded.o := -Wa,--no-warn -DENV_CRC=$(shell tools/envcrc 2>/dev/null)

@@ -18,12 +18,22 @@ DECLARE_GLOBAL_DATA_PTR;
 #undef DEBUG
 
 #ifdef DEBUG
-#define debugf(fmt, args...) do { printf("%s(): ", __func__); printf(fmt, ##args); } while (0)
+#define debugf(fmt, args...)        \
+	do                              \
+	{                               \
+		printf("%s(): ", __func__); \
+		printf(fmt, ##args);        \
+	} while (0)
 #else
 #define debugf(fmt, args...)
 #endif
 
-#define errf(fmt, args...) do { printf("ERROR @ %s(): ", __func__); printf(fmt, ##args); } while (0)
+#define errf(fmt, args...)                  \
+	do                                      \
+	{                                       \
+		printf("ERROR @ %s(): ", __func__); \
+		printf(fmt, ##args);                \
+	} while (0)
 
 #if defined(CONFIG_CMD_NET) && !defined(CONFIG_DM_ETH)
 
@@ -68,7 +78,7 @@ int dev_enum_net(struct device_info *di)
 	memcpy(di->di_net.hwaddr, eth_current->enetaddr, 6);
 
 	debugf("device found, returning cookie 0x%08x\n",
-		(u_int32_t)di->cookie);
+		   (u_int32_t)di->cookie);
 
 	return 1;
 }
